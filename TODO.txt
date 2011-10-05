@@ -1,0 +1,16 @@
+TODO
+
+try to simplify the gui code wrt showing a proper animation when there might be stones etc
+add variable line_color
+make win condition
+make chat
+maybe floaters take 2 clicks. the first places a piece with an exclamation mark on it, the second actually clicks there
+make saving functionality
+make undo
+change reset key combo to shift-delete from ctrl-k
+make animated pieces have a border and draw them over the grid
+
+BUG network reconnection sometmes displays 10+ "connection died" messages before getting a connection
+
+try to make every method 1 screen of code
+

@@ -1,0 +1,79 @@
+game-send = net-send				the game engine wants to output the command cmd
+net-packet handler list = game: parseclk, parsesay
+game-droppiece = gui-droppiece		display a new piece on the board
+gui-canclick = game-canclick			check if the cursor should show an allowed move, and if a click is allowed
+gui-localclick = game-localclick		send a new click event to the server (not displayed at first)
+game-gameover = gui-gameover		somebody won, so display a message
+gui-restart = game-restart			clear the board and the turn order. this can happen at any time
+game-myturn = gui-myturn
+
+
+UI elements:
+spinner during initial connection/lag
+most recent click is darker
+cursor is lighter
+pieces animate into place, slide+bounce, handled by gui, make sure its fast so it still feels like winmine
+play a game with michael
+
+win detection: "you win" or "you lose", shift-delete to clear the board
+if a person detects they lose, they announce it as well as the color they follow, like removing an element from a linked list
+
+shortcuts:
+ctrl-z undo
+shift-delete   clear board
+
+
+game states:
+	picking order
+	playing
+	gameover
+
+
+parse-click: 
+	droppiece(x,y,c,isfloater)
+	state PICKINGORDER
+		if firstcolor = null
+			this is the first click of the game. record the color to know when the order is set.
+			firstcolor = color
+		end
+		else
+			if color = firstcolor
+				the order picking is over. there should be at least 2 people in the order but we don't care here
+				state = PLAYING
+			end
+			that's a new person in the order. we need to check here if that was us, in which case we follow the previousperson.
+			if color = mycolor
+				i-follow = last-color
+			end
+		end
+	state PLAYING
+		if color = mycolor and isfloater
+			i-used-floater = true
+		end
+		check for win condition
+	state GAMEOVER
+		this won't happen, ignore it
+	last-color = color
+end parse-click
+
+canclick:
+	state PLAYING
+		if last-color != i-follow
+			return false
+		end
+		if needs-floater(x,y) and i-used-floater
+			return false
+		end
+		return true
+	state SETORDER
+		if i-follow is set
+			return false
+		end
+		return true
+	state GAMEOVER
+		return false
+end canclick
+		
+localclick:
+	droppiece x y
+end local click
