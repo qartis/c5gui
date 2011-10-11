@@ -19,11 +19,13 @@ WARNINGS=    -Wall -Wextra -pedantic  \
              -Wunused-function  -Wunused-label  -Wunused-parameter \
              -Wunused-value  -Wunused-variable  \
              -Wwrite-strings
-CFLAGS=$(WARNINGS) -g -I/Volumes/abf/fltk-1.3.0/ -L/Volumes/abf/fltk-1.3.0/lib -rdynamic -I../../../fltk-1.3.0 -L../../../fltk-solaris/lib -I../../../fltk-solaris -I/usr/local/include/freetype2 -I/usr/local/include -I/usr/openwin/include -fpermissive -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -D_THREAD_SAFE -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS -L../../../fltk-solaris/lib -L/usr/openwin/lib -R/usr/openwin/lib -lfltk -lXext -lXft -lfontconfig -lXinerama -lpthread -lm -lX11 -lsocket -lnsl
+FLAGS=-g -static
+CFLAGS=$(WARNINGS) $(FLAGS)
+LDFLAGS=$(FLAGS) -lfltk -lcurl
 all: red
 
 red: main.o net.o game.o gui.o
-	g++ main.o net.o game.o gui.o -lfltk -lcurl -o red $(CFLAGS)
+	g++ $(LDFLAGS) main.o net.o game.o gui.o -o red
 
 game.o: game.cpp game.h
 	g++ $(CFLAGS) -c game.cpp -o game.o
@@ -38,7 +40,4 @@ gui.o: gui.cpp gui.h
 	g++ $(CFLAGS) -c gui.cpp -o gui.o
 
 clean:
-	rm -f *.o red a.out
-
-mac: main.o game.o net.o gui.o
-	g++ -g -rdynamic main.o game.o net.o gui.o -o red -framework cocoa -L/Volumes/abf/fltk-1.3.0/lib -lfltk -lcurl
+	rm -f *.o red
