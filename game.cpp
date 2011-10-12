@@ -188,9 +188,6 @@ bool game_t::stonify(int x, int y){
 
 void game_t::set_piece(int x, int y, Fl_Color color, enum drop_type type){
     board[x][y] = color;
-    if (color == BOARD_EMPTY){
-        printf("WTF\nWTF\nWTF\n");
-    }
     if (color == BOARD_STONE || color == BOARD_EMPTY){
         droppiece_func(droppiece_obj, x, y, color, type);
     } else {
@@ -201,7 +198,6 @@ void game_t::set_piece(int x, int y, Fl_Color color, enum drop_type type){
             if (line_color != BOARD_EMPTY){
                 //someone just lost
                 if (color == line_color){
-                    printf("line round over\n");
                     line_color = BOARD_EMPTY;
                 } else if (color == my_color){
                     state = STATE_GAMEOVER;
@@ -210,26 +206,21 @@ void game_t::set_piece(int x, int y, Fl_Color color, enum drop_type type){
                     Fl_Color new_follow_color = remove_from_order(color);
                     if (i_follow_color == color){
                         i_follow_color = new_follow_color;
-                        printf("I (%s) was following %s, now I follow %s\n", colorname(my_color), colorname(color), colorname(new_follow_color));
+                        most_recent_color = i_follow_color;
                     }
-                    printf("%s removed from order, new order:\n", colorname(line_color));
-                    print_order();
                     if (num_in_order == 1){
-                        gameover_func(gameover_obj, true);
+                        if (order[0] == my_color){
+                            gameover_func(gameover_obj, true);
+                        }
                         state = STATE_GAMEOVER;
                     }
                 }
             }
-        } else {
-            if (line_color == BOARD_EMPTY){
-                line_color = color;
-                printf("%s just got a line\n", colorname(color));
-            } else {
-                printf("%s matched the line\n", colorname(color));
-            }
+        } else if (line_color == BOARD_EMPTY){
+            line_color = color;
         }
     }
-    if (color == my_color && type == DROP_FLOATER){
+    if (color == my_color && type == DROP_FLOATER && state != STATE_INIT){
         i_used_floater = true;
     }
 }
@@ -266,7 +257,6 @@ enum drop_type game_t::drop_available(void *obj, int x, int y){
         default:
             return DROP_NONE;
     }
-printf("WTF WTF WTF\n");
 
     return DROP_NONE;
 }
@@ -336,7 +326,6 @@ that->print_order();
 
     enum drop_type type = that->get_drop_type(x, y);
 
-    that->set_piece(x, y, color, type);
 
     switch (that->state){
     case STATE_INIT:
@@ -345,21 +334,18 @@ that->print_order();
         that->add_to_order(color);
         break;
     case STATE_SET_ORDER:
-        if (color == that->order[0]){
-            //the order picking is over. there should be at least 2 people in the order but we don't care here
-            that->state = STATE_PLAYING;
-        } else {
-            that->add_to_order(color);
-        }
         //a new person joined the order. if it was us, then we follow the previous person
         if (color == that->my_color){
             that->i_follow_color = that->most_recent_color;
         }
+        //if the order picking is over
+        if (color == that->order[0]){
+            that->state = STATE_PLAYING;
+        } else {
+            that->add_to_order(color);
+        }
         break;
     case STATE_PLAYING:
-        if (color == that->my_color){
-            //that->myturn_func(that->myturn_obj, true);
-        }
         //TODO check for win condition here
         break;
     case STATE_GAMEOVER:
@@ -368,6 +354,8 @@ that->print_order();
         break;
     }
     that->most_recent_color = color;
+
+    that->set_piece(x, y, color, type);
     return true;
 }
 

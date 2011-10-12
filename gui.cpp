@@ -43,7 +43,7 @@ int gui_t::handle(int event){
         if (drop_type == DROP_NONE){
             return 1;
         }
-        if (drop_type == DROP_FLOATER && (floater_hold_x != event_x || floater_hold_y != event_y)){
+        if (drop_type == DROP_FLOATER && !first_click && (floater_hold_x != event_x || floater_hold_y != event_y)){
             if (floater_hold_x == -1 || floater_hold_y == -1){
                 floater_hold_x = event_x;
                 floater_hold_y = event_y;
@@ -81,7 +81,6 @@ void gui_t::draw_anim_floater_click(struct anim_t *anim, float elapsed){
 }
 
 void gui_t::draw_anim_drop(struct anim_t *anim, float elapsed){
-    printf("drawing anim_drop\n");
     int draw_size = 20;
     int size_increment;
     fl_color(anim->color);
@@ -153,32 +152,24 @@ void gui_t::draw() {
     struct timeval now;
     gettimeofday(&now, NULL);
     animating = 0;
-    printf("animating=0\n");
     for(i=0;i<num_anims;i++){
         struct anim_t *anim = &(anims[i]);
         float elapsed = time_diff(&(anim->start), &now);
         if (anim->len && (elapsed > anim->len)){
-            printf("removing animation because it has a len (%f) and < (%f)\n", anim->len, elapsed);
-            printf("num_animations: %d -> %d\n", num_anims, num_anims-1);
             struct anim_t removed_anim = remove_animation(i);
+            i--;
             if (removed_anim.type == ANIM_DROP){
-                printf("removing a drop animation, color %s\n", colorname(removed_anim.color));
-                //if (clicks[removed_anim.x][removed_anim.y] != BOARD_STONE){
-                    printf("the spot isn't stone (clicks[%d][%d] = %s), so redrawing the piece\n", removed_anim.x, removed_anim.y, colorname(clicks[removed_anim.x][removed_anim.y]));
-                    clicks[removed_anim.x][removed_anim.y] = removed_anim.color;
-                    fl_color(removed_anim.color);
-                    fl_rectf(removed_anim.x * square_dim, removed_anim.y * square_dim, 20, 20);
-                    fl_color(FL_BLACK);
-                    fl_rect(removed_anim.x * square_dim, removed_anim.y * square_dim, 20, 20);
-               // }
-            }
+                clicks[removed_anim.x][removed_anim.y] = removed_anim.color;
+                fl_color(removed_anim.color);
+                fl_rectf(removed_anim.x * square_dim, removed_anim.y * square_dim, 20, 20);
+                fl_color(FL_BLACK);
+                fl_rect(removed_anim.x * square_dim, removed_anim.y * square_dim, 20, 20);
+            } 
         } else {
             (this->*(anim->draw_func))(anim, elapsed);
-            printf("animating=1\n");
             animating = 1;
         }
     }
-    printf("animating: %d\n", animating);
 
     fl_rect(0,0,square_dim * BOARD_DIM,square_dim * BOARD_DIM, FL_BLACK);
     for(i=0;i<BOARD_DIM;i++){
@@ -210,6 +201,7 @@ void gui_t::reset_board(void *obj){
     that->state = STATE_PLAYING;
     that->floater_hold_x = -1;
     that->floater_hold_y = -1;
+    that->first_click = 1;
 
     int i, j;
     for(i=0;i<BOARD_DIM;i++){
@@ -225,8 +217,7 @@ gui_t::gui_t(Fl_Color _my_color, int width, int height, const char *title) : Fl_
     end();
     cursor_x = -1;
     cursor_y = -1;
-//    skip_animations = true;
-    skip_animations = false;
+    skip_animations = true;
     Fl::add_timeout(ANIM_LEN, &gui_t::enable_animations, this);
     my_color = _my_color;
     reset_board(this);
@@ -260,6 +251,7 @@ int gui_t::get_animation_for_cell(int x, int y){
 
 void gui_t::drop_piece(void *obj, int x, int y, Fl_Color color, enum drop_type type){
     gui_t *that = (gui_t *)obj;
+    that->first_click = 0;
     if (that->skip_animations){
         that->clicks[x][y] = color;
         that->redraw();
@@ -318,13 +310,9 @@ float gui_t::bounceOut(float t, float b, float c, float d) {
 
 void gui_t::process_anims(void *obj){
     gui_t *that = (gui_t *)obj;
-    printf("process_anims: redrawing\n");
     that->redraw();
     if (that->animating){
-        printf("process_anims: still animating\n");
         Fl::repeat_timeout(ANIM_FPS, &gui_t::process_anims, obj);
-    } else {
-        printf("process_anims: animations done\n");
     }
 }
 

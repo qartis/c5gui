@@ -5,8 +5,8 @@ typedef enum drop_type (*canclick_func_t)(void *obj, int x, int y);
 typedef void (*resetgame_func_t)(void *obj);
 typedef void (gui_t::*draw_func_t)(struct anim_t *anim, float elapsed);
 
-#define ANIM_LEN 5.0f
-#define ANIM_FPS 1.0f/5.0f
+#define ANIM_LEN 0.7f
+#define ANIM_FPS 1.0f/60.0f
 
 enum anim_type {
     ANIM_DROP,
@@ -59,6 +59,7 @@ private:
     int skip_animations;
     int floater_hold_x;
     int floater_hold_y;
+    int first_click;
 
     void *onclick_obj;
     void *canclick_obj;
