@@ -1,7 +1,7 @@
 c5gui
 =============
 
-This is a minimal GUI for the board game c5, written in C++/FLTK. It's about as minimal as possible, with no external GUI components except for the game board itself. It currently uses libcheapsockets for networking, which means the server can run on a shared web host which restrict the user to running a single webserver socket for incoming connections.
+This is a minimal GUI for the board game c5, written in C++/FLTK. It's about as minimal as possible, with no external GUI components except for the game board itself. It uses libcheapsockets for networking, which means the server can run on a shared web host which restricts the user to running a single webserver socket for incoming connections.
 
 Features
 ----------
