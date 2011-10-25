@@ -50,7 +50,7 @@ public:
     void *net_obj;
     void *gui_obj;
     sendtxt_func_t sendtxt_func;
-	droppiece_func_t droppiece_func;
+    droppiece_func_t droppiece_func;
     resetgui_func_t resetgui_func;
     gameover_func_t gameover_func;
 };
