@@ -23,7 +23,7 @@ net_t::net_t(void){
 
 void net_t::connect(void){
     char buf[128];
-    sprintf(buf, "%s?offset=%lu", get_url, offset);
+    sprintf(buf, "%s?offset=%lu", HTTP_GET_URL, offset);
     new_conn(buf, 1);
 }
 
@@ -39,7 +39,7 @@ void net_t::send(void *obj, const char *fmt, ...){
     char *url;
     char *msg = NULL;
     int n;
-    const char *prefix = "http://qartis.com/cgi-bin/c5_put.cgi?";
+    const char *prefix = HTTP_POST_URL;
 
     va_start(args, fmt);
     n = 1 + vsnprintf(msg, 0, fmt, args);
@@ -141,7 +141,7 @@ void net_t::perform_reconnects_cb(void *data){
         char *url = conn->url;
         if (conn->is_poll){
             char buf[128];
-            sprintf(buf, "%s?offset=%lu", get_url, net->offset);
+            sprintf(buf, "%s?offset=%lu", HTTP_GET_URL, net->offset);
             url = buf;
         }
         net->new_conn(url, conn->is_poll);
@@ -173,7 +173,7 @@ void net_t::cleanup_completed_transfer(CURLMsg *msg){
         printf("connection died!\n");
         Fl::remove_timeout(timer_cb);
         char buf[128];
-        sprintf(buf, "%s?offset=%lu", get_url, offset);
+        sprintf(buf, "%s?offset=%lu", HTTP_GET_URL, offset);
         new_conn(buf, 1);
         timer_cb((void*)this);
     }

@@ -1,6 +1,7 @@
 typedef bool (*packet_handler_t)(void *obj, const char *buf);
 
-#define get_url "http://qartis.com/cgi-bin/c5_get.cgi"
+#define HTTP_GET_URL  "http://qartis.com/cgi-bin/c5_get.cgi"
+#define HTTP_POST_URL "http://qartis.com/cgi-bin/c5_put.cgi?"
 #define NUM_HANDLERS 32
 
 class net_t;
