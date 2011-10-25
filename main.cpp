@@ -1,5 +1,3 @@
-#define _GNU_SOURCE
-
 #include <stdio.h>
 #include <string.h>
 #include <FL/Fl.H>
@@ -50,14 +48,17 @@ int main(int argc, char **argv) {
     game_t game(my_color);
     gui_t gui(my_color, 500, 500, "c5");
 
-    game.set_sendtxt_func(&net, &net_t::send);
-    game.set_droppiece_func(&gui, &gui_t::drop_piece);
-    game.set_resetgui_func(&gui, &gui_t::reset_board);
-    game.set_gameover_func(&gui, &gui_t::game_over);
+    game.net_obj = (void *)&net;
+    game.gui_obj = (void *)&gui;
+    game.sendtxt_func = &net_t::send;
+    game.droppiece_func = &gui_t::drop_piece;
+    game.resetgui_func = &gui_t::reset_board;
+    game.gameover_func = &gui_t::game_over;
 
-    gui.set_onclick_func(&game, &game_t::local_click);
-    gui.set_canclick_func(&game, &game_t::drop_available);
-    gui.set_resetgame_func(&game, &game_t::send_reset);
+    gui.game_obj = (void *)&game;
+    gui.onclick_func = &game_t::local_click;
+    gui.canclick_func = &game_t::drop_available;
+    gui.resetgame_func = &game_t::send_reset;
 
     net.add_packet_handler(&game, &game_t::parse_clk);
     net.add_packet_handler(&game, &game_t::parse_cls);

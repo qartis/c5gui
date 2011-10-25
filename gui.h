@@ -61,12 +61,6 @@ private:
     int floater_hold_y;
     int first_click;
 
-    void *onclick_obj;
-    void *canclick_obj;
-    void *resetgame_obj;
-    onclick_func_t onclick_func;
-    canclick_func_t canclick_func;
-    resetgame_func_t resetgame_func;
 
 public:
     gui_t(Fl_Color my_color, int w, int h, const char *l);
@@ -78,7 +72,8 @@ public:
     static void enable_animations(void *obj);
     static void game_over(void *obj, bool won);
 
-    void set_onclick_func(void *obj, onclick_func_t func);
-    void set_canclick_func(void *obj, canclick_func_t func);
-    void set_resetgame_func(void *obj, resetgame_func_t func);
+    void *game_obj;
+    onclick_func_t onclick_func;
+    canclick_func_t canclick_func;
+    resetgame_func_t resetgame_func;
 };

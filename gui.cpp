@@ -23,7 +23,7 @@ int gui_t::handle(int event){
         redraw();
         return 1;
     case FL_MOVE:
-        if (canclick_func(canclick_obj, event_x, event_y)){
+        if (canclick_func(game_obj, event_x, event_y)){
             if (event_x != cursor_x || event_y != cursor_y){
                 cursor_x = event_x;
                 cursor_y = event_y;
@@ -39,7 +39,7 @@ int gui_t::handle(int event){
         if (Fl::event_button() != FL_LEFT_MOUSE){
             return 0;
         }
-        drop_type = canclick_func(canclick_obj, event_x, event_y);
+        drop_type = canclick_func(game_obj, event_x, event_y);
         if (drop_type == DROP_NONE){
             return 1;
         }
@@ -57,11 +57,11 @@ int gui_t::handle(int event){
         floater_hold_x = -1;
         floater_hold_y = -1;
         printf("clicked\n");
-        onclick_func(onclick_obj, event_x, event_y);
+        onclick_func(game_obj, event_x, event_y);
         return 1;
     case FL_SHORTCUT:
         if ((Fl::event_state() & FL_CTRL) && (Fl::event_key() == 'k')){
-            resetgame_func(resetgame_obj);
+            resetgame_func(game_obj);
             return 1;
         }
         //fall through
@@ -223,21 +223,6 @@ gui_t::gui_t(Fl_Color _my_color, int width, int height, const char *title) : Fl_
     reset_board(this);
 }
 
-void gui_t::set_onclick_func(void *obj, onclick_func_t func){
-    onclick_obj = obj;
-    onclick_func = func;
-}
-
-void gui_t::set_canclick_func(void *obj, canclick_func_t func){
-    canclick_obj = obj;
-    canclick_func = func;
-}
-
-void gui_t::set_resetgame_func(void *obj, resetgame_func_t func){
-    resetgame_obj = obj;
-    resetgame_func = func;
-}
-
 int gui_t::get_animation_for_cell(int x, int y){
     int i;
     for(i=0;i<num_anims;i++){
@@ -247,7 +232,6 @@ int gui_t::get_animation_for_cell(int x, int y){
     }
     return -1;
 }
-    
 
 void gui_t::drop_piece(void *obj, int x, int y, Fl_Color color, enum drop_type type){
     gui_t *that = (gui_t *)obj;

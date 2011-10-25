@@ -186,42 +186,42 @@ bool game_t::stonify(int x, int y){
     return false;
 }
 
+void game_t::unmatched_line(Fl_Color color){
+    if (color == line_color){
+        line_color = BOARD_EMPTY;
+    } else if (color == my_color){
+        state = STATE_GAMEOVER;
+        gameover_func(gui_obj, false);
+    } else {
+        Fl_Color new_follow_color = remove_from_order(color);
+        if (i_follow_color == color){
+            i_follow_color = new_follow_color;
+            most_recent_color = i_follow_color;
+        }
+        if (num_in_order == 1){
+            if (order[0] == my_color){
+                gameover_func(gui_obj, true);
+            }
+            state = STATE_GAMEOVER;
+        }
+    }
+}
+
 void game_t::set_piece(int x, int y, Fl_Color color, enum drop_type type){
     board[x][y] = color;
     if (color == BOARD_STONE || color == BOARD_EMPTY){
-        droppiece_func(droppiece_obj, x, y, color, type);
+        droppiece_func(gui_obj, x, y, color, type);
     } else {
         bool already_became_stone = stonify(x, y);
-        printf("%s clicked%s\n", colorname(color), already_became_stone ? " (STONE)" : "");
         if (!already_became_stone){
-            droppiece_func(droppiece_obj, x, y, color, type);
+            droppiece_func(gui_obj, x, y, color, type);
             if (line_color != BOARD_EMPTY){
                 //someone just lost
-                if (color == line_color){
-                    line_color = BOARD_EMPTY;
-                } else if (color == my_color){
-                    state = STATE_GAMEOVER;
-                    gameover_func(gameover_obj, false);
-                } else {
-                    Fl_Color new_follow_color = remove_from_order(color);
-                    if (i_follow_color == color){
-                        i_follow_color = new_follow_color;
-                        most_recent_color = i_follow_color;
-                    }
-                    if (num_in_order == 1){
-                        if (order[0] == my_color){
-                            gameover_func(gameover_obj, true);
-                        }
-                        state = STATE_GAMEOVER;
-                    }
-                }
+                unmatched_line(color);
             }
         } else if (line_color == BOARD_EMPTY){
             line_color = color;
         }
-    }
-    if (color == my_color && type == DROP_FLOATER && state != STATE_INIT){
-        i_used_floater = true;
     }
 }
 
@@ -269,7 +269,7 @@ bool game_t::parse_cls(void *obj, const char *packet){
     }
 
     that->reset();
-    that->resetgui_func(that->resetgui_obj);
+    that->resetgui_func(that->gui_obj);
 
     return true;
 }
@@ -289,7 +289,6 @@ Fl_Color game_t::remove_from_order(Fl_Color color){
             }
         }
     }
-    printf("Couldn't find that person in the order! color %d\n", color);
     return BOARD_EMPTY;
 }
             
@@ -314,7 +313,7 @@ bool game_t::parse_clk(void *obj, const char *packet){
     if (!startswith(packet, "clk ")){
         return false;
     }
-that->print_order();
+
     int x, y;
     unsigned c, is_floater;
     Fl_Color color;
@@ -326,19 +325,19 @@ that->print_order();
 
     enum drop_type type = that->get_drop_type(x, y);
 
+    if (color == that->my_color && type == DROP_FLOATER && that->state != STATE_INIT){
+        that->i_used_floater = true;
+    }
 
     switch (that->state){
     case STATE_INIT:
-        //this is the first click of the game. record the color to know when the order is set
         that->state = STATE_SET_ORDER;
         that->add_to_order(color);
         break;
     case STATE_SET_ORDER:
-        //a new person joined the order. if it was us, then we follow the previous person
         if (color == that->my_color){
             that->i_follow_color = that->most_recent_color;
         }
-        //if the order picking is over
         if (color == that->order[0]){
             that->state = STATE_PLAYING;
         } else {
@@ -346,11 +345,8 @@ that->print_order();
         }
         break;
     case STATE_PLAYING:
-        //TODO check for win condition here
-        break;
     case STATE_GAMEOVER:
     default:
-        //this won't happen, so ignore it
         break;
     }
     that->most_recent_color = color;
@@ -359,26 +355,10 @@ that->print_order();
     return true;
 }
 
-void game_t::set_sendtxt_func(void *obj, sendtxt_func_t func){
-    sendtxt_obj = obj;
-    sendtxt_func = func;
-}
-
-void game_t::set_droppiece_func(void *obj, droppiece_func_t func){
-    droppiece_obj = obj;
-    droppiece_func = func;
-}
-
-void game_t::set_resetgui_func(void *obj, resetgui_func_t func){
-    resetgui_obj = obj;
-    resetgui_func = func;
-}
-
 void game_t::local_click(void *obj, int x, int y){
     game_t *that = (game_t *)obj;
 
     if (drop_available(obj, x, y) == DROP_NONE){
-        printf("=============================wtf?\n");
         return;
     }
 
@@ -387,16 +367,11 @@ void game_t::local_click(void *obj, int x, int y){
         is_floater = 1;
     }
 
-    that->sendtxt_func(that->sendtxt_obj, "clk %d %d %u %u", x, y, that->my_color, is_floater);
+    that->sendtxt_func(that->net_obj, "clk %d %d %u %u", x, y, that->my_color, is_floater);
 }
 
 void game_t::send_reset(void *obj){
     game_t *that = (game_t *)obj;
 
-    that->sendtxt_func(that->sendtxt_obj, "cls");
-}
-
-void game_t::set_gameover_func(void *obj, gameover_func_t func){
-    gameover_obj = obj;
-    gameover_func = func;
+    that->sendtxt_func(that->net_obj, "cls");
 }

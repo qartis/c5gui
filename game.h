@@ -28,6 +28,7 @@ private:
     void add_to_order(Fl_Color color);
     Fl_Color remove_from_order(Fl_Color color);
     void set_piece(int x, int y, Fl_Color color, enum drop_type type);
+    void unmatched_line(Fl_Color color);
     Fl_Color my_color;
     Fl_Color i_follow_color;
     Fl_Color most_recent_color;
@@ -37,15 +38,6 @@ private:
     int num_in_order;
 
 
-    void *sendtxt_obj;
-    void *droppiece_obj;
-    void *resetgui_obj;
-    void *gameover_obj;
-    sendtxt_func_t sendtxt_func;
-	droppiece_func_t droppiece_func;
-    resetgui_func_t resetgui_func;
-    gameover_func_t gameover_func;
-
 public:
     game_t(Fl_Color my_color);
     
@@ -54,9 +46,11 @@ public:
     static void local_click(void *obj, int x, int y);
     static enum drop_type drop_available(void *obj, int x, int y);
     static void send_reset(void *obj);
-    
-    void set_sendtxt_func(void *obj, sendtxt_func_t func);
-    void set_droppiece_func(void *obj, droppiece_func_t func);
-    void set_resetgui_func(void *obj, resetgui_func_t func);
-    void set_gameover_func(void *obj, gameover_func_t func);
+
+    void *net_obj;
+    void *gui_obj;
+    sendtxt_func_t sendtxt_func;
+	droppiece_func_t droppiece_func;
+    resetgui_func_t resetgui_func;
+    gameover_func_t gameover_func;
 };
