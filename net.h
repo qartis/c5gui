@@ -38,10 +38,8 @@ private:
     void addsock(curl_socket_t s, CURL *e, int act);
     void check_multi_info(void);
     void new_conn(const char *url, bool is_poll);
-    void mcode_or_die(const char *where, CURLMcode code);
     void cleanup_completed_transfer(CURLMsg *msg);
     void dispatch_packet(const char *);
-
 
 public:
     net_t(void);

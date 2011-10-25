@@ -120,34 +120,15 @@ void net_t::dispatch_packet(const char *buf){
     printf("error: got an unhandled packet '%s'\n", buf);
 }
 
-void net_t::mcode_or_die(const char *where, CURLMcode code) {
-    if (code == CURLM_OK){
-        return;
-    }
-    const char *s;
-    switch (code) {
-    case     CURLM_CALL_MULTI_PERFORM: s="CURLM_CALL_MULTI_PERFORM"; break;
-    case     CURLM_BAD_HANDLE:         s="CURLM_BAD_HANDLE";         break;
-    case     CURLM_BAD_EASY_HANDLE:    s="CURLM_BAD_EASY_HANDLE";    break;
-    case     CURLM_OUT_OF_MEMORY:      s="CURLM_OUT_OF_MEMORY";      break;
-    case     CURLM_INTERNAL_ERROR:     s="CURLM_INTERNAL_ERROR";     break;
-    case     CURLM_BAD_SOCKET:         s="CURLM_BAD_SOCKET";         break;
-    case     CURLM_UNKNOWN_OPTION:     s="CURLM_UNKNOWN_OPTION";     break;
-    case     CURLM_LAST:               s="CURLM_LAST";               break;
-    case     CURLM_OK:                 s="CURLM_OK";                 break;
-    default: s="CURLM_unknown";
-    }
-    printf("ERROR: %s returns %s\n", where, s);
-    exit(code);
-}
-
 void net_t::timer_cb(void *data){
     net_t *net = (net_t *)data;
     CURLMcode rc = curl_multi_socket_action(net->multi,
                                             CURL_SOCKET_TIMEOUT,
                                             0,
                                             &net->still_running);
-    net->mcode_or_die("timer_cb: curl_multi_socket_action", rc);
+    if (rc != CURLM_OK){
+        //TODO error
+    }
     net->check_multi_info();
 }
 
@@ -227,7 +208,9 @@ void net_t::event_cb(int fd, void *data){
     CURLMcode rc;
 
     rc = curl_multi_socket_action(net->multi, fd, 0, &net->still_running);
-    net->mcode_or_die("event_cb: curl_multi_socket_action", rc);
+    if (rc != CURLM_OK){
+        //TODO error
+    }
 
     net->check_multi_info();
     if(!net->still_running) {
@@ -308,5 +291,7 @@ void net_t::new_conn(const char *url, bool is_poll){
     curl_easy_setopt(conn->easy, CURLOPT_LOW_SPEED_TIME, 30L);
 
     rc = curl_multi_add_handle(multi, conn->easy);
-    mcode_or_die("new_conn: curl_multi_add_handle", rc);
+    if (rc != CURLM_OK){
+        //TODO error
+    }
 }
