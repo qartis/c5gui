@@ -60,7 +60,7 @@ int gui_t::handle(int event){
         onclick_func(game_obj, event_x, event_y);
         return 1;
     case FL_SHORTCUT:
-        if ((Fl::event_state() & FL_CTRL) && (Fl::event_key() == 'k')){
+        if ((Fl::event_state() & FL_SHIFT) && (Fl::event_key() == FL_Delete)){
             resetgame_func(game_obj);
             return 1;
         }
