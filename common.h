@@ -33,3 +33,7 @@ inline const char* colorname(Fl_Color color){
         return "unknown_color";
     }
 }
+
+#ifdef WIN32
+#define __attribute__(x)
+#endif
