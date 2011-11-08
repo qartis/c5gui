@@ -2,7 +2,21 @@
 #include <FL/Fl_Double_Window.H>
 #include <FL/fl_draw.H>
 #include <FL/names.h>
+#include <time.h>
+#ifndef WIN32
 #include <sys/time.h>
+#endif
+
+#ifdef WIN32
+//struct timeval { int tv_sec, tv_usec; };
+int gettimeofday(struct timeval *tv, struct timezone *tz){
+    DWORD t = timeGetTime ();
+
+    tv->tv_sec = t / 1000;
+    tv->tv_usec = (t % 1000) * 1000;
+	return 0;
+}
+#endif
 
 #include "common.h"
 #include "gui.h"
@@ -150,6 +164,8 @@ void gui_t::draw() {
     }
 
     struct timeval now;
+
+
     gettimeofday(&now, NULL);
     animating = 0;
     for(i=0;i<num_anims;i++){
