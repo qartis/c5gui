@@ -16,6 +16,11 @@ Fl_Color progname_to_color(const char *progname){
     if (lastslash){
         progname = lastslash + strlen("/");
     }
+	
+    lastslash = strrchr(progname, '\\');
+    if (lastslash){
+        progname = lastslash + strlen("\\");
+    }
 
     const char *c5 = strstr(progname, "c5");
     if (c5){
@@ -31,11 +36,10 @@ Fl_Color progname_to_color(const char *progname){
     if (startswith(progname, "green"))  return FL_GREEN;
     if (startswith(progname, "yellow")) return FL_YELLOW;
 
-    unsigned rgb;
-    if (sscanf(progname, "%06x", &rgb)){
-        unsigned char r = (rgb >>  0) & 0xFF;
-        unsigned char g = (rgb >>  8) & 0xFF;
-        unsigned char b = (rgb >> 16) & 0xFF;
+    unsigned char r;
+    unsigned char g;
+    unsigned char b;
+    if (sscanf(progname, "%02x%02x%02x", &r, &g, &b) == 3){
         return fl_rgb_color(r,g,b);
     }
     return FL_RED;
