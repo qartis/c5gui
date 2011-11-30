@@ -89,11 +89,15 @@ int gui_t::handle(int event){
 }
 
 void gui_t::draw_anim_win(struct anim_t *anim, float elapsed){
+    (void)anim;
+    (void)elapsed;
     //TODO
     printf("WIN\n");
 }
 
 void gui_t::draw_anim_floater_click(struct anim_t *anim, float elapsed){
+    (void)anim;
+    (void)elapsed;
     //TODO
     printf("floater click\n");
 }
@@ -175,7 +179,7 @@ void gui_t::draw() {
     for(i=0;i<num_anims;i++){
         struct anim_t *anim = &(anims[i]);
         float elapsed = time_diff(&(anim->start), &now);
-        if (anim->len && (elapsed > anim->len)){
+        if (anim->len > 0 && (elapsed > anim->len)){
             struct anim_t removed_anim = remove_animation(i);
             i--;
             if (removed_anim.type == ANIM_DROP){
