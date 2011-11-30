@@ -259,7 +259,7 @@ void net_t::setsock(struct SockInfo *f, curl_socket_t s, CURL*e, int act){
 
 void net_t::addsock(curl_socket_t s, CURL *easy, int action) {
     struct SockInfo *fdp = (struct SockInfo *)malloc(sizeof(struct SockInfo));
-    memset(fdp, sizeof(struct SockInfo), '\0');
+    memset(fdp, '\0', sizeof(struct SockInfo));
 
     fdp->global = this;
     fdp->fd = s;
@@ -285,7 +285,7 @@ void net_t::new_conn(const char *url, bool is_poll){
     CURLMcode rc;
 
     struct ConnInfo *conn = (struct ConnInfo *)malloc(sizeof(struct ConnInfo));
-    memset(conn, sizeof(struct ConnInfo), '\0');
+    memset(conn, '\0', sizeof(struct ConnInfo));
 
     conn->is_poll = is_poll;
 
