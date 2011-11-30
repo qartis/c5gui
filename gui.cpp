@@ -53,6 +53,9 @@ int gui_t::handle(int event){
         if (Fl::event_button() != FL_LEFT_MOUSE){
             return 0;
         }
+        if (disabled){
+            return 1;
+        }
         drop_type = canclick_func(game_obj, event_x, event_y);
         if (drop_type == DROP_NONE){
             return 1;
@@ -72,6 +75,7 @@ int gui_t::handle(int event){
         floater_hold_y = -1;
         printf("clicked\n");
         onclick_func(game_obj, event_x, event_y);
+        disabled = 1;
         return 1;
     case FL_SHORTCUT:
         if ((Fl::event_state() & FL_SHIFT) && (Fl::event_key() == FL_Delete)){
@@ -218,6 +222,7 @@ void gui_t::reset_board(void *obj){
     that->floater_hold_x = -1;
     that->floater_hold_y = -1;
     that->first_click = 1;
+    that->disabled = 0;
     that->last_x = -1;
     that->last_y = -1;
 
@@ -254,6 +259,7 @@ int gui_t::get_animation_for_cell(int x, int y){
 void gui_t::drop_piece(void *obj, int x, int y, Fl_Color color, enum drop_type type){
     gui_t *that = (gui_t *)obj;
     that->first_click = 0;
+    that->disabled = 0;
     if (that->last_x != -1 && that->last_y != -1){
         that->clicks[that->last_x][that->last_y] = that->last_color;
     }
