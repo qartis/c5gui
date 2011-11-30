@@ -10,7 +10,7 @@ The goals of this project are reliability and simplicity, so there are very few 
 - server retains all state, so clients can leave and join at any time
 - simple design and minimal code
 - multiplayer support up to 32 players
-- binary is statically linked by default
+- game exe is less than 150kb
 
 Usage
 ------
