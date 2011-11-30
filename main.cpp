@@ -36,11 +36,11 @@ Fl_Color progname_to_color(const char *progname){
     if (startswith(progname, "green"))  return FL_GREEN;
     if (startswith(progname, "yellow")) return FL_YELLOW;
 
-    unsigned char r;
-    unsigned char g;
-    unsigned char b;
+    unsigned r;
+    unsigned g;
+    unsigned b;
     if (sscanf(progname, "%02x%02x%02x", &r, &g, &b) == 3){
-        return fl_rgb_color(r,g,b);
+        return fl_rgb_color((unsigned char)r,(unsigned char)g,(unsigned char)b);
     }
     return FL_RED;
 }
