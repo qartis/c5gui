@@ -81,20 +81,29 @@ size_t net_t::ignore_data(void *buf, size_t size, size_t nmemb, void *data){
 size_t net_t::parse_packet_cb(void *buf, size_t size, size_t nmemb, void *data){
     struct ConnInfo *conn = (struct ConnInfo *)data;
     net_t *net = conn->global;
-    unsigned tmp_offset = 0;
+    int tmp_offset;
     char *packetbuf = (char *)malloc(size * nmemb + strlen(net->netbuf) + 1);
     strcpy(packetbuf, net->netbuf);
     strncat(packetbuf, (const char *)buf, size * nmemb);
     char *start = packetbuf;
     for(;;){
-        if (sscanf(start, "%u", &tmp_offset) != 1){
-            break;
-        }
+        /* Make sure we have a full line of data */
         char *nl = strchr(start, '\n');
         if (!nl){
             break;
         }
         *nl = '\0';
+
+        /* If tmp_offset isn't present, then this is during the initial
+           game load */
+        if (!sscanf(start, "%d", &tmp_offset)){
+            tmp_offset = -1;
+        }
+
+        /* If tmp_offset is zero, that means the game board is being cleared.
+           If it's -1 then this is a valid data line, but there is no integer
+           to skip over. If it's a positive integer, then this is a valid data
+           line and we must skip past the initial integer to start parsing. */
         if (tmp_offset > 0){
             char *space = strchr(start, ' ');
             if (!space){
@@ -102,9 +111,21 @@ size_t net_t::parse_packet_cb(void *buf, size_t size, size_t nmemb, void *data){
             }
             start = space + 1;
         }
+
+        /* If the game board was just cleared, then this string will be "0" */
         net->dispatch_packet(start);
+
         start = nl + 1;
-        net->offset = tmp_offset;
+
+        /* tmp_offset might be positive, or zero, which indicates the read
+           offset for future data requests. If it's -1 that means we're still
+           loading the initial board state, so later we will want to start
+           reading that many bytes into the data stream.*/
+        if (tmp_offset > -1){
+            net->offset = tmp_offset;
+        } else if (tmp_offset == -1){
+            //net->offset += line_len + strlen("\n");
+        }
     }
     strcpy(net->netbuf, start);
     free(packetbuf);
