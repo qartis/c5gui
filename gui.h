@@ -60,6 +60,9 @@ private:
     int floater_hold_x;
     int floater_hold_y;
     int first_click;
+    int last_x;
+    int last_y;
+    Fl_Color last_color;
 
 
 public:

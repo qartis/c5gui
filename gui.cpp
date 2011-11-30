@@ -7,6 +7,9 @@
 #include <sys/time.h>
 #endif
 
+#include "common.h"
+#include "gui.h"
+
 #ifdef WIN32
 //struct timeval { int tv_sec, tv_usec; };
 int gettimeofday(struct timeval *tv, struct timezone *tz){
@@ -17,9 +20,6 @@ int gettimeofday(struct timeval *tv, struct timezone *tz){
 	return 0;
 }
 #endif
-
-#include "common.h"
-#include "gui.h"
 
 int gui_t::handle(int event){
     int len = w();
@@ -218,6 +218,8 @@ void gui_t::reset_board(void *obj){
     that->floater_hold_x = -1;
     that->floater_hold_y = -1;
     that->first_click = 1;
+    that->last_x = -1;
+    that->last_y = -1;
 
     int i, j;
     for(i=0;i<BOARD_DIM;i++){
@@ -252,30 +254,41 @@ int gui_t::get_animation_for_cell(int x, int y){
 void gui_t::drop_piece(void *obj, int x, int y, Fl_Color color, enum drop_type type){
     gui_t *that = (gui_t *)obj;
     that->first_click = 0;
+    if (that->last_x != -1 && that->last_y != -1){
+        that->clicks[that->last_x][that->last_y] = that->last_color;
+    }
+    that->last_x = x;
+    that->last_y = y;
+    that->last_color = color;
+    if (color != BOARD_STONE){
+        color = fl_darker(color);
+    }
     if (that->skip_animations){
         that->clicks[x][y] = color;
         that->redraw();
-    } else {
-        int idx = that->get_animation_for_cell(x, y);
-        if (idx == -1 || color != BOARD_STONE){
-            idx = that->num_anims;
-            that->num_anims++;
-        }
-        struct anim_t *anim = &(that->anims[idx]);
-        anim->drop_type = type;
-        anim->type = ANIM_DROP;
-        anim->draw_func = &gui_t::draw_anim_drop;
-        anim->x = x;
-        anim->y = y;
-        anim->color = color;
-        anim->len = ANIM_LEN;
-        gettimeofday(&(anim->start), NULL);
-        that->animating = 1;
-        Fl::remove_timeout(&gui_t::process_anims);
-        Fl::add_timeout(0, &gui_t::process_anims, obj);
-        if (color == BOARD_STONE){
-            that->clicks[x][y] = BOARD_EMPTY;
-        }
+        return;
+    }
+    int idx = that->get_animation_for_cell(x, y);
+    if (idx == -1 || color != BOARD_STONE){
+        idx = that->num_anims;
+        that->num_anims++;
+    }
+    struct anim_t *anim = &(that->anims[idx]);
+    anim->drop_type = type;
+    anim->type = ANIM_DROP;
+    anim->draw_func = &gui_t::draw_anim_drop;
+    anim->x = x;
+    anim->y = y;
+    anim->color = color;
+    anim->len = ANIM_LEN;
+    gettimeofday(&(anim->start), NULL);
+    that->animating = 1;
+    Fl::remove_timeout(&gui_t::process_anims);
+    Fl::add_timeout(0, &gui_t::process_anims, obj);
+
+    /* Stone pieces cover up any existing pieces */
+    if (color == BOARD_STONE){
+        that->clicks[x][y] = BOARD_EMPTY;
     }
 }
 
