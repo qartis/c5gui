@@ -73,13 +73,15 @@ int gui_t::handle(int event)
             redraw();
             return 1;
         }
-        if (floater_hold_x != -1 && floater_hold_y != -1) {
+        if (drop_type != DROP_FLOATER
+            && (floater_hold_x != -1 && floater_hold_y != -1)) {
             floater_hold_x = -1;
             floater_hold_y = -1;
             redraw();
             return 1;
         }
-        printf("clicked\n");
+        floater_hold_x = -1;
+        floater_hold_y = -1;
         onclick_func(game_obj, event_x, event_y);
         disabled = 1;
         return 1;
