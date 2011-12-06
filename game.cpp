@@ -106,6 +106,11 @@ enum drop_type game_t::get_drop_type(int x, int y)
     return DROP_FLOATER;
 }
 
+bool game_t::valid(int x, int y){
+    return (0 <= x && x < grid_dim) &&
+           (0 <= y && y < grid_dim);
+}
+
 int game_t::stonify(int x, int y)
 {
     int i;
@@ -120,43 +125,35 @@ int game_t::stonify(int x, int y)
     int botleft = 0;
     int botright = 0;
 
-    for (i = x - 1; i >= 0 && board[i][y] == board[x][y]; i--) {
+    for (i = x - 1; valid(i, y) && board[i][y] == board[x][y]; i--) {
         left++;
     }
 
-    for (i = x + 1; i < grid_dim && board[i][y] == board[x][y]; i++) {
+    for (i = x + 1; valid(i, y) && board[i][y] == board[x][y]; i++) {
         right++;
     }
 
-    for (i = y - 1; i >= 0 && board[x][i] == board[x][y]; i--) {
+    for (i = y - 1; valid(x, y) && board[x][i] == board[x][y]; i--) {
         up++;
     }
 
-    for (i = y + 1; i < grid_dim && board[x][i] == board[x][y]; i++) {
+    for (i = y + 1; valid(x, i) && board[x][i] == board[x][y]; i++) {
         down++;
     }
 
-    for (i = 1;
-         i < grid_dim && x - i >= 0 && y - i >= 0
-         && board[x - i][y - i] == board[x][y]; i++) {
+    for (i = 1; valid(x - i, y - i) && board[x - i][y - i] == board[x][y]; i++) {
         topleft++;
     }
 
-    for (i = 1;
-         i < grid_dim && x + i < grid_dim && y - i >= 0
-         && board[x + i][y - i] == board[x][y]; i++) {
+    for (i = 1; valid(x + i, y - i) && board[x + i][y - i] == board[x][y]; i++) {
         topright++;
     }
 
-    for (i = 1;
-         i < grid_dim && x - i >= 0 && y + i < grid_dim
-         && board[x - i][y + i] == board[x][y]; i++) {
+    for (i = 1; valid(x - i, y + i) && board[x - i][y + i] == board[x][y]; i++) {
         botleft++;
     }
 
-    for (i = 1;
-         i < grid_dim && x + i < grid_dim && y + i < grid_dim
-         && board[x + i][y + i] == board[x][y]; i++) {
+    for (i = 1; valid(x + i, y + i) && board[x + i][y + i] == board[x][y]; i++) {
         botright++;
     }
 

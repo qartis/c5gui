@@ -27,6 +27,7 @@ private:
     void reset(void);
     enum drop_type get_drop_type(int x, int y);
     void print_order();
+    bool valid(int x, int y);
     void add_to_order(Fl_Color color);
     Fl_Color remove_from_order(Fl_Color color);
     void set_piece(int x, int y, Fl_Color color, enum drop_type type);
