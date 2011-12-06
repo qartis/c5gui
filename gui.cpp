@@ -11,7 +11,6 @@
 #include "gui.h"
 
 #ifdef WIN32
-//struct timeval { int tv_sec, tv_usec; };
 int gettimeofday(struct timeval *tv, struct timezone *tz){
     DWORD t = timeGetTime ();
 
@@ -71,8 +70,12 @@ int gui_t::handle(int event){
             redraw();
             return 1;
         }
-        floater_hold_x = -1;
-        floater_hold_y = -1;
+        if (floater_hold_x != -1 && floater_hold_y != -1){
+            floater_hold_x = -1;
+            floater_hold_y = -1;
+            redraw();
+            return 1;
+        }
         printf("clicked\n");
         onclick_func(game_obj, event_x, event_y);
         disabled = 1;
