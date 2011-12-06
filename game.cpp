@@ -108,7 +108,6 @@ enum drop_type game_t::get_drop_type(int x, int y){
 }
 
 int game_t::stonify(int x, int y){
-    //TODO this counts the center stone multiple times for overlapping lines
     int i;
     int len = 0;
 
@@ -154,40 +153,53 @@ int game_t::stonify(int x, int y){
     }
 
     if (left + right + 1 >= 5){
-        for(i=x-left;i<x+right+1;i++){
-            set_piece(i, y, BOARD_STONE, DROP_FLOATER);
+        for(i=0;i<left;i++){
+            set_piece(x-(i+1), y, BOARD_STONE, DROP_FLOATER);
+            len++;
+        }
+        for(i=0;i<right;i++){
+            set_piece(x+(i+1), y, BOARD_STONE, DROP_FLOATER);
             len++;
         }
     }
 
     if (up + down + 1 >= 5){
-        for(i=y-up;i<y+down+1;i++){
-            set_piece(x, i, BOARD_STONE, DROP_FLOATER);
+        for(i=0;i<up;i++){
+            set_piece(x, y-(i+1), BOARD_STONE, DROP_FLOATER);
+            len++;
+        }
+        for(i=0;i<down;i++){
+            set_piece(x, y+(i+1), BOARD_STONE, DROP_FLOATER);
             len++;
         }
     }
 
 
     if (topleft + botright + 1 >= 5){
-        for(i=0;i<topleft+1;i++){
-            set_piece(x-i, y-i, BOARD_STONE, DROP_FLOATER);
+        for(i=0;i<topleft;i++){
+            set_piece(x-(i+1), y-(i+1), BOARD_STONE, DROP_FLOATER);
             len++;
         }
-        for(i=1;i<botright+1;i++){
-			set_piece(x+i, y+i, BOARD_STONE, DROP_FLOATER);
+        for(i=0;i<botright;i++){
+			set_piece(x+(i+1), y+(i+1), BOARD_STONE, DROP_FLOATER);
             len++;
         }
     }
 
     if (topright + botleft + 1 >= 5){
-        for(i=0;i<topright+1;i++){
-            set_piece(x+i, y-i, BOARD_STONE, DROP_FLOATER);
+        for(i=0;i<topright;i++){
+            set_piece(x+(i+1), y-(i+1), BOARD_STONE, DROP_FLOATER);
             len++;
         }
-        for(i=1;i<botleft+1;i++){
-            set_piece(x-i, y+i, BOARD_STONE, DROP_FLOATER);
+        for(i=0;i<botleft;i++){
+            set_piece(x-(i+1), y+(i+1), BOARD_STONE, DROP_FLOATER);
             len++;
         }
+    }
+
+    if (len > 0){
+        set_piece(x, y, BOARD_STONE, DROP_FLOATER);
+        len++;
     }
 
     return len;
