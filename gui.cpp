@@ -162,7 +162,7 @@ void gui_t::draw() {
     }
 
     if (floater_hold_x != -1 && floater_hold_y != -1){
-        fl_color(fl_lighter(my_color));
+        fl_color(fl_lighter(fl_lighter(my_color)));
         fl_rectf(floater_hold_x * square_dim + 1, floater_hold_y * square_dim + 1, square_dim - 1, square_dim - 1);
     }
 
