@@ -16,8 +16,8 @@ game_t::game_t(Fl_Color color){
 void game_t::reset(void){
     int i, j;
     i_follow_color = BOARD_EMPTY;
-    line_color = BOARD_EMPTY;
-    line_len = -1;
+    cur_line_color = BOARD_EMPTY;
+    cur_line_len = -1;
     state = STATE_INIT;
     i_used_floater = false;
     num_in_order = 0;
@@ -107,90 +107,96 @@ enum drop_type game_t::get_drop_type(int x, int y){
     return DROP_FLOATER;
 }
 
-bool game_t::stonify(int x, int y){
+int game_t::stonify(int x, int y){
+    //TODO this counts the center stone multiple times for overlapping lines
     int i;
+    int len = 0;
 
     int left = 0;
+    int right = 0;
+    int up = 0;
+    int down = 0;
+    int topleft = 0;
+    int topright = 0;
+    int botleft = 0;
+    int botright = 0;
+
     for(i=x-1;i>=0 && board[i][y] == board[x][y];i--){
         left++;
     }
 
-    int right = 0;
     for(i=x+1;i<grid_dim && board[i][y] == board[x][y];i++){
         right++;
+    }
+
+    for(i=y-1;i>=0 && board[x][i] == board[x][y];i--){
+        up++;
+    }
+
+    for(i=y+1;i<grid_dim && board[x][i] == board[x][y];i++){
+        down++;
+    }
+
+    for(i=1;i<grid_dim && x-i >= 0 && y-i >= 0 && board[x-i][y-i] == board[x][y];i++){
+        topleft++;
+    }
+
+    for(i=1;i<grid_dim && x+i < grid_dim && y-i >= 0 && board[x+i][y-i] == board[x][y];i++){
+        topright++;
+    }
+
+    for(i=1;i<grid_dim && x-i >= 0 && y+i < grid_dim && board[x-i][y+i] == board[x][y];i++){
+        botleft++;
+    }
+
+    for(i=1;i<grid_dim && x+i < grid_dim && y+i < grid_dim && board[x+i][y+i] == board[x][y];i++){
+        botright++;
     }
 
     if (left + right + 1 >= 5){
         for(i=x-left;i<x+right+1;i++){
             set_piece(i, y, BOARD_STONE, DROP_FLOATER);
+            len++;
         }
-        return true;
-    }
-
-    int up = 0;
-    for(i=y-1;i>=0 && board[x][i] == board[x][y];i--){
-        up++;
-    }
-
-    int down = 0;
-    for(i=y+1;i<grid_dim && board[x][i] == board[x][y];i++){
-        down++;
     }
 
     if (up + down + 1 >= 5){
         for(i=y-up;i<y+down+1;i++){
             set_piece(x, i, BOARD_STONE, DROP_FLOATER);
+            len++;
         }
-        return true;
     }
 
-    int topleft = 0;
-    for(i=1;i<grid_dim && x-i >= 0 && y-i >= 0 && board[x-i][y-i] == board[x][y];i++){
-        topleft++;
-    }
-
-    int topright = 0;
-    for(i=1;i<grid_dim && x+i < grid_dim && y-i >= 0 && board[x+i][y-i] == board[x][y];i++){
-        topright++;
-    }
-
-    int botleft = 0;
-    for(i=1;i<grid_dim && x-i >= 0 && y+i < grid_dim && board[x-i][y+i] == board[x][y];i++){
-        botleft++;
-    }
-
-    int botright = 0;
-    for(i=1;i<grid_dim && x+i < grid_dim && y+i < grid_dim && board[x+i][y+i] == board[x][y];i++){
-        botright++;
-    }
 
     if (topleft + botright + 1 >= 5){
         for(i=0;i<topleft+1;i++){
             set_piece(x-i, y-i, BOARD_STONE, DROP_FLOATER);
+            len++;
         }
         for(i=1;i<botright+1;i++){
 			set_piece(x+i, y+i, BOARD_STONE, DROP_FLOATER);
+            len++;
         }
-        return true;
     }
 
     if (topright + botleft + 1 >= 5){
         for(i=0;i<topright+1;i++){
             set_piece(x+i, y-i, BOARD_STONE, DROP_FLOATER);
+            len++;
         }
         for(i=1;i<botleft+1;i++){
             set_piece(x-i, y+i, BOARD_STONE, DROP_FLOATER);
+            len++;
         }
-        return true;
     }
 
-    return false;
+    return len;
 }
 
 void game_t::unmatched_line(Fl_Color color){
-    if (color == line_color){
-        line_color = BOARD_EMPTY;
-        line_len = -1;
+    if (color == cur_line_color){
+        cur_line_color = BOARD_EMPTY;
+        cur_line_len = -1;
     } else if (color == my_color){
         state = STATE_GAMEOVER;
         gameover_func(gui_obj, false);
@@ -211,19 +217,23 @@ void game_t::unmatched_line(Fl_Color color){
 
 void game_t::set_piece(int x, int y, Fl_Color color, enum drop_type type){
     board[x][y] = color;
+
     if (color == BOARD_STONE){
         droppiece_func(gui_obj, x, y, color, type);
-    } else {
-        bool already_became_stone = stonify(x, y);
-        if (!already_became_stone){
-            droppiece_func(gui_obj, x, y, color, type);
-            if (line_color != BOARD_EMPTY){
-                //someone just lost
-                unmatched_line(color);
-            }
-        } else if (line_color == BOARD_EMPTY){
-            line_color = color;
+        return;
+    }
+
+    int line_len = stonify(x, y);
+    if (line_len == 0){
+        droppiece_func(gui_obj, x, y, color, type);
+        if (cur_line_len > 0){
+            unmatched_line(color);
         }
+    } else if (cur_line_len == -1 || color == cur_line_color){
+        cur_line_color = color;
+        cur_line_len = line_len;
+    } else if (line_len < cur_line_len){
+        unmatched_line(color);
     }
 }
 

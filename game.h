@@ -21,7 +21,7 @@ private:
     bool is_my_turn;
     bool clicked_during_set_order;
     bool used_floater_this_game;
-    bool stonify(int x, int y);
+    int stonify(int x, int y);
     void reset(void);
     enum drop_type get_drop_type(int x, int y);
     void print_order();
@@ -33,8 +33,8 @@ private:
     Fl_Color i_follow_color;
     Fl_Color most_recent_color;
     int i_used_floater;
-    Fl_Color line_color;
-    int line_len;
+    Fl_Color cur_line_color;
+    int cur_line_len;
     Fl_Color order[32];
     int num_in_order;
 
