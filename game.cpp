@@ -17,6 +17,7 @@ void game_t::reset(void){
     int i, j;
     i_follow_color = BOARD_EMPTY;
     line_color = BOARD_EMPTY;
+    line_len = -1;
     state = STATE_INIT;
     i_used_floater = false;
     num_in_order = 0;
@@ -189,6 +190,7 @@ bool game_t::stonify(int x, int y){
 void game_t::unmatched_line(Fl_Color color){
     if (color == line_color){
         line_color = BOARD_EMPTY;
+        line_len = -1;
     } else if (color == my_color){
         state = STATE_GAMEOVER;
         gameover_func(gui_obj, false);
@@ -209,7 +211,7 @@ void game_t::unmatched_line(Fl_Color color){
 
 void game_t::set_piece(int x, int y, Fl_Color color, enum drop_type type){
     board[x][y] = color;
-    if (color == BOARD_STONE || color == BOARD_EMPTY){
+    if (color == BOARD_STONE){
         droppiece_func(gui_obj, x, y, color, type);
     } else {
         bool already_became_stone = stonify(x, y);

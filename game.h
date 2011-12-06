@@ -34,6 +34,7 @@ private:
     Fl_Color most_recent_color;
     int i_used_floater;
     Fl_Color line_color;
+    int line_len;
     Fl_Color order[32];
     int num_in_order;
 
