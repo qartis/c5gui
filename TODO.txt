@@ -1,5 +1,2 @@
-try to simplify the gui code wrt showing a proper animation when there might be stones etc
 make save
 make undo
-6+ lines
-fix bug wrt most recent click highlight not turning off

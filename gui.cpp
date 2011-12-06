@@ -186,8 +186,12 @@ void gui_t::draw() {
             struct anim_t removed_anim = remove_animation(i);
             i--;
             if (removed_anim.type == ANIM_DROP){
-                clicks[removed_anim.x][removed_anim.y] = removed_anim.color;
-                fl_color(removed_anim.color);
+                /* This piece might already have been colored due to the
+                   highlight being removed from it */
+                if (clicks[removed_anim.x][removed_anim.y] == BOARD_EMPTY){
+                    clicks[removed_anim.x][removed_anim.y] = removed_anim.color;
+                }
+                fl_color(clicks[removed_anim.x][removed_anim.y]);
                 fl_rectf(removed_anim.x * square_dim, removed_anim.y * square_dim, 20, 20);
                 fl_color(FL_BLACK);
                 fl_rect(removed_anim.x * square_dim, removed_anim.y * square_dim, 20, 20);
