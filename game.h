@@ -1,7 +1,9 @@
-typedef void (*sendtxt_func_t)(void *obj, const char *fmt, ...) __attribute__ ((format (printf, 2, 3)));
-typedef void (*droppiece_func_t)(void *obj, int x, int y, Fl_Color c, enum drop_type type);
-typedef void (*resetgui_func_t)(void *obj);
-typedef void (*gameover_func_t)(void *obj, bool won);
+typedef void (*sendtxt_func_t) (void *obj, const char *fmt, ...)
+    __attribute__ ((format(printf, 2, 3)));
+typedef void (*droppiece_func_t) (void *obj, int x, int y, Fl_Color c,
+                                  enum drop_type type);
+typedef void (*resetgui_func_t) (void *obj);
+typedef void (*gameover_func_t) (void *obj, bool won);
 
 struct order_node {
     Fl_Color color;
@@ -38,10 +40,9 @@ private:
     Fl_Color order[32];
     int num_in_order;
 
-
 public:
-    game_t(Fl_Color my_color);
-    
+     game_t(Fl_Color my_color);
+
     static bool parse_clk(void *obj, const char *s);
     static bool parse_cls(void *obj, const char *s);
     static void local_click(void *obj, int x, int y);

@@ -1,4 +1,4 @@
-typedef bool (*packet_handler_t)(void *obj, const char *buf);
+typedef bool(*packet_handler_t) (void *obj, const char *buf);
 
 #define HTTP_GET_URL  "http://qartis.com/cgi-bin/c5_get.cgi"
 #define HTTP_POST_URL "http://qartis.com/cgi-bin/c5_put.cgi?"
@@ -35,23 +35,26 @@ private:
     long unsigned offset;
 
     void remsock(struct SockInfo *f);
-    void setsock(struct SockInfo *f, curl_socket_t s, CURL *e, int act);
-    void addsock(curl_socket_t s, CURL *e, int act);
+    void setsock(struct SockInfo *f, curl_socket_t s, CURL * e, int act);
+    void addsock(curl_socket_t s, CURL * e, int act);
     void check_multi_info(void);
     void new_conn(const char *url, bool is_poll);
-    void cleanup_completed_transfer(CURLMsg *msg);
+    void cleanup_completed_transfer(CURLMsg * msg);
     void dispatch_packet(const char *);
 
 public:
-    net_t(void);
+     net_t(void);
     void connect(void);
     void add_packet_handler(void *obj, packet_handler_t);
-    static void send(void *obj, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
-    static size_t parse_packet_cb(void *buffer, size_t size, size_t nmemb, void *data);
+    static void send(void *obj, const char *fmt, ...)
+        __attribute__ ((format(printf, 2, 3)));
+    static size_t parse_packet_cb(void *buffer, size_t size, size_t nmemb,
+                                  void *data);
     static size_t ignore_data(void *buf, size_t size, size_t nmemb, void *data);
     static void timer_cb(void *data);
     static void perform_reconnects_cb(void *data);
-    static int update_timeout_cb(CURLM *multi, long timeout_ms, void *data);
+    static int update_timeout_cb(CURLM * multi, long timeout_ms, void *data);
     static void event_cb(int fd, void *data);
-    static int sock_cb(CURL *e, curl_socket_t s, int what, void *cbp, void *sockp);
+    static int sock_cb(CURL * e, curl_socket_t s, int what, void *cbp,
+                       void *sockp);
 };

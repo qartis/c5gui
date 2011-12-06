@@ -1,9 +1,9 @@
-typedef void (*onclick_func_t)(void *obj, int x, int y);
+typedef void (*onclick_func_t) (void *obj, int x, int y);
 class gui_t;
 
-typedef enum drop_type (*canclick_func_t)(void *obj, int x, int y);
-typedef void (*resetgame_func_t)(void *obj);
-typedef void (gui_t::*draw_func_t)(struct anim_t *anim, float elapsed);
+typedef enum drop_type (*canclick_func_t) (void *obj, int x, int y);
+typedef void (*resetgame_func_t) (void *obj);
+typedef void (gui_t::*draw_func_t) (struct anim_t * anim, float elapsed);
 
 #define ANIM_LEN 0.6f
 #define ANIM_FPS 1.0f/90.0f
@@ -27,7 +27,7 @@ struct anim_t {
     bool is_win;
 };
 
-class gui_t : public Fl_Double_Window {
+class gui_t:public Fl_Double_Window {
 private:
     int handle(int event);
     void draw(void);
@@ -65,12 +65,12 @@ private:
     int last_y;
     Fl_Color last_color;
 
-
 public:
-    gui_t(Fl_Color my_color, int w, int h, const char *l);
+     gui_t(Fl_Color my_color, int w, int h, const char *l);
 
     static void set_active(void *obj, bool active);
-	static void drop_piece(void *obj, int x, int y, Fl_Color c, enum drop_type type);
+    static void drop_piece(void *obj, int x, int y, Fl_Color c,
+                           enum drop_type type);
     static void reset_board(void *obj);
     static void process_anims(void *obj);
     static void enable_animations(void *obj);

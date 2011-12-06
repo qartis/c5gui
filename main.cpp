@@ -11,41 +11,48 @@
 #include "game.h"
 #include "gui.h"
 
-Fl_Color progname_to_color(const char *progname){
+Fl_Color progname_to_color(const char *progname)
+{
     const char *lastslash = strrchr(progname, '/');
-    if (lastslash){
+    if (lastslash) {
         progname = lastslash + strlen("/");
     }
-	
+
     lastslash = strrchr(progname, '\\');
-    if (lastslash){
+    if (lastslash) {
         progname = lastslash + strlen("\\");
     }
 
     const char *c5 = strstr(progname, "c5");
-    if (c5){
+    if (c5) {
         progname = c5 + strlen("c5");
     }
 
-    if (isspace(progname[0])){
+    if (isspace(progname[0])) {
         progname = progname + 1;
     }
 
-    if (startswith(progname, "red"))    return FL_RED;
-    if (startswith(progname, "blue"))   return FL_BLUE;
-    if (startswith(progname, "green"))  return FL_GREEN;
-    if (startswith(progname, "yellow")) return FL_YELLOW;
+    if (startswith(progname, "red"))
+        return FL_RED;
+    if (startswith(progname, "blue"))
+        return FL_BLUE;
+    if (startswith(progname, "green"))
+        return FL_GREEN;
+    if (startswith(progname, "yellow"))
+        return FL_YELLOW;
 
     unsigned r;
     unsigned g;
     unsigned b;
-    if (sscanf(progname, "%02x%02x%02x", &r, &g, &b) == 3){
-        return fl_rgb_color((unsigned char)r,(unsigned char)g,(unsigned char)b);
+    if (sscanf(progname, "%02x%02x%02x", &r, &g, &b) == 3) {
+        return fl_rgb_color((unsigned char)r, (unsigned char)g,
+                            (unsigned char)b);
     }
     return FL_RED;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     Fl_Color my_color = progname_to_color(argv[0]);
 
     net_t net;

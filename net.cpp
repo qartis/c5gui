@@ -6,7 +6,8 @@
 #include "common.h"
 #include "net.h"
 
-net_t::net_t(void){
+net_t::net_t(void)
+{
     num_packet_handlers = 0;
     offset = 0;
     reconnect_list = NULL;
@@ -21,20 +22,23 @@ net_t::net_t(void){
     curl_multi_setopt(multi, CURLMOPT_TIMERDATA, this);
 }
 
-void net_t::connect(void){
+void net_t::connect(void)
+{
     char buf[128];
     sprintf(buf, "%s?offset=%lu", HTTP_GET_URL, offset);
     new_conn(buf, 1);
 }
 
-void net_t::add_packet_handler(void *obj, packet_handler_t handler){
+void net_t::add_packet_handler(void *obj, packet_handler_t handler)
+{
     packet_handler_objs[num_packet_handlers] = obj;
     packet_handler_funcs[num_packet_handlers] = handler;
     num_packet_handlers++;
 }
 
-void net_t::send(void *obj, const char *fmt, ...){
-    net_t *net = (net_t *)obj;
+void net_t::send(void *obj, const char *fmt, ...)
+{
+    net_t *net = (net_t *) obj;
     va_list args;
     char *url;
     char *msg = NULL;
@@ -56,8 +60,8 @@ void net_t::send(void *obj, const char *fmt, ...){
     char *endp = url + strlen(prefix);
     char *msgp = msg;
 
-    while(*msgp){
-        if (!isalnum(*msgp)){
+    while (*msgp) {
+        if (!isalnum(*msgp)) {
             sprintf(endp, "%%%2X", *msgp);
             endp += 3;
         } else {
@@ -71,14 +75,16 @@ void net_t::send(void *obj, const char *fmt, ...){
     free(msg);
 }
 
-size_t net_t::ignore_data(void *buf, size_t size, size_t nmemb, void *data){
+size_t net_t::ignore_data(void *buf, size_t size, size_t nmemb, void *data)
+{
     (void)buf;
     (void)data;
     /* TODO handle this data reply */
     return size * nmemb;
 }
 
-size_t net_t::parse_packet_cb(void *buf, size_t size, size_t nmemb, void *data){
+size_t net_t::parse_packet_cb(void *buf, size_t size, size_t nmemb, void *data)
+{
     struct ConnInfo *conn = (struct ConnInfo *)data;
     net_t *net = conn->global;
     int tmp_offset;
@@ -86,17 +92,17 @@ size_t net_t::parse_packet_cb(void *buf, size_t size, size_t nmemb, void *data){
     strcpy(packetbuf, net->netbuf);
     strncat(packetbuf, (const char *)buf, size * nmemb);
     char *start = packetbuf;
-    for(;;){
+    for (;;) {
         /* Make sure we have a full line of data */
         char *nl = strchr(start, '\n');
-        if (!nl){
+        if (!nl) {
             break;
         }
         *nl = '\0';
 
         /* If tmp_offset isn't present, then this is during the initial
            game load */
-        if (!sscanf(start, "%d", &tmp_offset)){
+        if (!sscanf(start, "%d", &tmp_offset)) {
             tmp_offset = -1;
         }
 
@@ -104,9 +110,9 @@ size_t net_t::parse_packet_cb(void *buf, size_t size, size_t nmemb, void *data){
            If it's -1 then this is a valid data line, but there is no integer
            to skip over. If it's a positive integer, then this is a valid data
            line and we must skip past the initial integer to start parsing. */
-        if (tmp_offset > 0){
+        if (tmp_offset > 0) {
             char *space = strchr(start, ' ');
-            if (!space){
+            if (!space) {
                 break;
             }
             start = space + 1;
@@ -120,10 +126,10 @@ size_t net_t::parse_packet_cb(void *buf, size_t size, size_t nmemb, void *data){
         /* tmp_offset might be positive, or zero, which indicates the read
            offset for future data requests. If it's -1 that means we're still
            loading the initial board state, so later we will want to start
-           reading that many bytes into the data stream.*/
-        if (tmp_offset > -1){
+           reading that many bytes into the data stream. */
+        if (tmp_offset > -1) {
             net->offset = tmp_offset;
-        } else if (tmp_offset == -1){
+        } else if (tmp_offset == -1) {
             //net->offset += line_len + strlen("\n");
         }
     }
@@ -133,34 +139,38 @@ size_t net_t::parse_packet_cb(void *buf, size_t size, size_t nmemb, void *data){
     return size * nmemb;
 }
 
-void net_t::dispatch_packet(const char *buf){
+void net_t::dispatch_packet(const char *buf)
+{
     int i;
-    for(i=0;i<num_packet_handlers;i++){
-        if (packet_handler_funcs[i](packet_handler_objs[i], buf)) return;
+    for (i = 0; i < num_packet_handlers; i++) {
+        if (packet_handler_funcs[i] (packet_handler_objs[i], buf))
+            return;
     }
     printf("error: got an unhandled packet '%s'\n", buf);
 }
 
-void net_t::timer_cb(void *data){
-    net_t *net = (net_t *)data;
+void net_t::timer_cb(void *data)
+{
+    net_t *net = (net_t *) data;
     CURLMcode rc = curl_multi_socket_action(net->multi,
                                             CURL_SOCKET_TIMEOUT,
                                             0,
                                             &net->still_running);
-    if (rc != CURLM_OK){
+    if (rc != CURLM_OK) {
         //TODO error
     }
     net->check_multi_info();
 }
 
-void net_t::perform_reconnects_cb(void *data){
-    net_t *net = (net_t *)data;
+void net_t::perform_reconnects_cb(void *data)
+{
+    net_t *net = (net_t *) data;
     struct ConnInfo *conn;
     struct ConnInfo *next;
 
-    for (conn = net->reconnect_list; conn; conn = next){
+    for (conn = net->reconnect_list; conn; conn = next) {
         char *url = conn->url;
-        if (conn->is_poll){
+        if (conn->is_poll) {
             char buf[128];
             sprintf(buf, "%s?offset=%lu", HTTP_GET_URL, net->offset);
             url = buf;
@@ -173,7 +183,8 @@ void net_t::perform_reconnects_cb(void *data){
     net->reconnect_list = NULL;
 }
 
-void net_t::cleanup_completed_transfer(CURLMsg *msg){
+void net_t::cleanup_completed_transfer(CURLMsg * msg)
+{
     struct ConnInfo *conn;
     CURL *easy = msg->easy_handle;
     CURLcode res = msg->data.result;
@@ -181,28 +192,30 @@ void net_t::cleanup_completed_transfer(CURLMsg *msg){
     curl_multi_remove_handle(multi, easy);
     curl_easy_cleanup(easy);
 
-    if (res != CURLE_OK){
-        printf("died: %s%s\n", curl_easy_strerror(res), conn->is_poll ? " (poll)" : " (upload)");
+    if (res != CURLE_OK) {
+        printf("died: %s%s\n", curl_easy_strerror(res),
+               conn->is_poll ? " (poll)" : " (upload)");
         conn->next = reconnect_list;
         reconnect_list = conn;
         Fl::remove_timeout(perform_reconnects_cb);
-        Fl::add_timeout(1.0, perform_reconnects_cb, (void*)this);
+        Fl::add_timeout(1.0, perform_reconnects_cb, (void *)this);
         return;
     }
 
-    if (conn->is_poll){
+    if (conn->is_poll) {
         printf("connection died!\n");
         Fl::remove_timeout(timer_cb);
         char buf[128];
         sprintf(buf, "%s?offset=%lu", HTTP_GET_URL, offset);
         new_conn(buf, 1);
-        timer_cb((void*)this);
+        timer_cb((void *)this);
     }
     free(conn->url);
     free(conn);
 }
 
-void net_t::check_multi_info(){
+void net_t::check_multi_info()
+{
     CURLMsg *msg;
     int msgs_left;
 
@@ -213,42 +226,48 @@ void net_t::check_multi_info(){
     }
 }
 
-int net_t::update_timeout_cb(CURLM *multi, long timeout_ms, void *userp){
+int net_t::update_timeout_cb(CURLM * multi, long timeout_ms, void *userp)
+{
     (void)multi;
     double t = (double)timeout_ms / 1000.0;
-    net_t *net=(net_t *)userp;
+    net_t *net = (net_t *) userp;
 
-    if (timeout_ms > -1){
+    if (timeout_ms > -1) {
         Fl::add_timeout(t, timer_cb, (void *)net);
     }
     return 0;
 }
 
-void net_t::event_cb(int fd, void *data){
-    net_t *net = (net_t*) data;
+void net_t::event_cb(int fd, void *data)
+{
+    net_t *net = (net_t *) data;
     CURLMcode rc;
 
     rc = curl_multi_socket_action(net->multi, fd, 0, &net->still_running);
-    if (rc != CURLM_OK){
+    if (rc != CURLM_OK) {
         //TODO error
     }
 
     net->check_multi_info();
-    if(!net->still_running) {
+    if (!net->still_running) {
         Fl::remove_timeout(timer_cb);
     }
 }
 
-void net_t::remsock(struct SockInfo *f){
-    if (!f){
+void net_t::remsock(struct SockInfo *f)
+{
+    if (!f) {
         return;
     }
     Fl::remove_fd(f->fd);
     free(f);
 }
 
-void net_t::setsock(struct SockInfo *f, curl_socket_t s, CURL*e, int act){
-    int when = (act&CURL_POLL_IN?FL_READ:0)|(act&CURL_POLL_OUT?FL_WRITE:0);
+void net_t::setsock(struct SockInfo *f, curl_socket_t s, CURL * e, int act)
+{
+    int when =
+        (act & CURL_POLL_IN ? FL_READ : 0) | (act & CURL_POLL_OUT ? FL_WRITE :
+                                              0);
 
     f->sockfd = s;
     f->action = act;
@@ -257,7 +276,8 @@ void net_t::setsock(struct SockInfo *f, curl_socket_t s, CURL*e, int act){
     Fl::add_fd(f->fd, when, event_cb, (void *)this);
 }
 
-void net_t::addsock(curl_socket_t s, CURL *easy, int action) {
+void net_t::addsock(curl_socket_t s, CURL * easy, int action)
+{
     struct SockInfo *fdp = (struct SockInfo *)malloc(sizeof(struct SockInfo));
     memset(fdp, '\0', sizeof(struct SockInfo));
 
@@ -267,9 +287,10 @@ void net_t::addsock(curl_socket_t s, CURL *easy, int action) {
     curl_multi_assign(multi, s, fdp);
 }
 
-int net_t::sock_cb(CURL *e, curl_socket_t s, int what, void *cbp, void *sockp){
-    net_t *net = (net_t*) cbp;
-    struct SockInfo *fdp = (struct SockInfo*) sockp;
+int net_t::sock_cb(CURL * e, curl_socket_t s, int what, void *cbp, void *sockp)
+{
+    net_t *net = (net_t *) cbp;
+    struct SockInfo *fdp = (struct SockInfo *)sockp;
 
     if (what == CURL_POLL_REMOVE) {
         net->remsock(fdp);
@@ -281,7 +302,8 @@ int net_t::sock_cb(CURL *e, curl_socket_t s, int what, void *cbp, void *sockp){
     return 0;
 }
 
-void net_t::new_conn(const char *url, bool is_poll){
+void net_t::new_conn(const char *url, bool is_poll)
+{
     CURLMcode rc;
 
     struct ConnInfo *conn = (struct ConnInfo *)malloc(sizeof(struct ConnInfo));
@@ -297,7 +319,7 @@ void net_t::new_conn(const char *url, bool is_poll){
     conn->global = this;
     conn->url = strdup(url);
     curl_easy_setopt(conn->easy, CURLOPT_URL, conn->url);
-    if (conn->is_poll){
+    if (conn->is_poll) {
         curl_easy_setopt(conn->easy, CURLOPT_WRITEFUNCTION, parse_packet_cb);
     } else {
         curl_easy_setopt(conn->easy, CURLOPT_WRITEFUNCTION, ignore_data);
@@ -312,7 +334,7 @@ void net_t::new_conn(const char *url, bool is_poll){
     curl_easy_setopt(conn->easy, CURLOPT_LOW_SPEED_TIME, 30L);
 
     rc = curl_multi_add_handle(multi, conn->easy);
-    if (rc != CURLM_OK){
+    if (rc != CURLM_OK) {
         //TODO error
     }
 }
