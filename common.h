@@ -7,10 +7,24 @@ enum drop_type {
     DROP_FLOATER
 };
 
+struct cell_t {
+    int x;
+    int y;
+};
+
+static struct cell_t INVALID_CELL = {-1, -1};
+
+inline int cellcmp(struct cell_t a, struct cell_t b)
+{
+    return (a.x - b.x) ? (a.x - b.x) : (a.y - b.y);
+}
+
 #define BOARD_EMPTY FL_WHITE
 #define BOARD_STONE FL_BLACK
 
 #define BOARD_DIM 25
+
+#define MAX 64
 
 inline int startswith(const char *a, const char *b)
 {

@@ -1,8 +1,9 @@
-typedef void (*onclick_func_t) (void *obj, int x, int y);
-class gui_t;
-
-typedef enum drop_type (*canclick_func_t) (void *obj, int x, int y);
+typedef void (*onclick_func_t) (void *obj, struct cell_t cell);
+typedef enum drop_type (*canclick_func_t) (void *obj, struct cell_t cell);
 typedef void (*resetgame_func_t) (void *obj);
+typedef void (*undo_func_t) (void *obj);
+
+class gui_t;
 typedef void (gui_t::*draw_func_t) (struct anim_t * anim, float elapsed);
 
 #define ANIM_LEN 0.6f
@@ -10,9 +11,9 @@ typedef void (gui_t::*draw_func_t) (struct anim_t * anim, float elapsed);
 
 enum anim_type {
     ANIM_DROP,
-    ANIM_WIN,
     ANIM_FLOATER_CLICK
 };
+
 
 struct anim_t {
     enum anim_type type;
@@ -22,10 +23,9 @@ struct anim_t {
 
     enum drop_type drop_type;
     Fl_Color color;
-    int x, y;
-
-    bool is_win;
+    struct cell_t cell;
 };
+
 
 class gui_t:public Fl_Double_Window {
 private:
@@ -38,7 +38,8 @@ private:
     void draw_anim_drop(struct anim_t *anim, float elapsed);
     void draw_anim_floater_click(struct anim_t *anim, float elapsed);
     struct anim_t remove_animation(int idx);
-    int get_animation_for_cell(int x, int y);
+    int get_animation_for_cell(struct cell_t cell);
+    int valid(struct cell_t cell);
 
     enum {
         STATE_PLAYING,
@@ -47,29 +48,25 @@ private:
     } state;
 
     Fl_Color clicks[BOARD_DIM][BOARD_DIM];
-    struct anim_t anims[32];
+    struct anim_t anims[MAX];
     int num_anims;
     Fl_Color my_color;
     int animating;
     int square_dim;
-    int cursor_x;
-    int cursor_y;
-    int prev_cursor_x;
-    int prev_cursor_y;
+    struct cell_t cursor_cell;
+    struct cell_t prev_cursor_cell;
     int skip_animations;
-    int floater_hold_x;
-    int floater_hold_y;
+    struct cell_t floater_hold_cell;
     int first_click;
     int disabled;
-    int last_x;
-    int last_y;
+    struct cell_t last_click_cell;
     Fl_Color last_color;
 
 public:
      gui_t(Fl_Color my_color, int w, int h, const char *l);
 
     static void set_active(void *obj, bool active);
-    static void drop_piece(void *obj, int x, int y, Fl_Color c,
+    static void drop_piece(void *obj, struct cell_t cell, Fl_Color c,
                            enum drop_type type);
     static void reset_board(void *obj);
     static void process_anims(void *obj);
@@ -80,4 +77,5 @@ public:
     onclick_func_t onclick_func;
     canclick_func_t canclick_func;
     resetgame_func_t resetgame_func;
+    undo_func_t undo_func;
 };

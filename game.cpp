@@ -23,6 +23,7 @@ void game_t::reset(void)
     state = STATE_INIT;
     i_used_floater = false;
     num_in_order = 0;
+    num_turns = 0;
 
     for (i = 0; i < grid_dim; i++) {
         for (j = 0; j < grid_dim; j++) {
@@ -31,13 +32,16 @@ void game_t::reset(void)
     }
 }
 
-enum drop_type game_t::get_drop_type(int x, int y)
+enum drop_type game_t::get_drop_type(struct cell_t cell)
 {
     int i;
     int can_fall_from_left = true;
     int can_fall_from_right = true;
     int can_fall_from_top = true;
     int can_fall_from_bottom = true;
+
+    int x = cell.x;
+    int y = cell.y;
 
     if (board[x][y] != BOARD_EMPTY) {
         return DROP_NONE;
@@ -106,12 +110,13 @@ enum drop_type game_t::get_drop_type(int x, int y)
     return DROP_FLOATER;
 }
 
-bool game_t::valid(int x, int y){
+bool game_t::valid(int x, int y)
+{
     return (0 <= x && x < grid_dim) &&
            (0 <= y && y < grid_dim);
 }
 
-int game_t::stonify(int x, int y)
+int game_t::stonify(struct cell_t cell)
 {
     int i;
     int len = 0;
@@ -124,6 +129,9 @@ int game_t::stonify(int x, int y)
     int topright = 0;
     int botleft = 0;
     int botright = 0;
+
+    int x = cell.x;
+    int y = cell.y;
 
     for (i = x - 1; valid(i, y) && board[i][y] == board[x][y]; i--) {
         left++;
@@ -211,10 +219,10 @@ int game_t::stonify(int x, int y)
 
 void game_t::unmatched_line(Fl_Color color)
 {
-    if (color == cur_line_color) {
+    if (color == cur_line_color){
         cur_line_color = BOARD_EMPTY;
         cur_line_len = -1;
-    } else if (color == my_color) {
+    } else if (color == my_color){
         state = STATE_GAMEOVER;
         gameover_func(gui_obj, false);
     } else {
@@ -234,16 +242,24 @@ void game_t::unmatched_line(Fl_Color color)
 
 void game_t::set_piece(int x, int y, Fl_Color color, enum drop_type type)
 {
-    board[x][y] = color;
+    struct cell_t cell;
+    cell.x = x;
+    cell.y = y;
+
+    board[cell.x][cell.y] = color;
+
+    turns[num_turns].cell = cell;
+    turns[num_turns].color = color;
+    num_turns++;
 
     if (color == BOARD_STONE) {
-        droppiece_func(gui_obj, x, y, color, type);
+        droppiece_func(gui_obj, cell, color, type);
         return;
     }
 
-    int line_len = stonify(x, y);
+    int line_len = stonify(cell);
     if (line_len == 0) {
-        droppiece_func(gui_obj, x, y, color, type);
+        droppiece_func(gui_obj, cell, color, type);
         if (cur_line_len > 0) {
             unmatched_line(color);
         }
@@ -255,11 +271,11 @@ void game_t::set_piece(int x, int y, Fl_Color color, enum drop_type type)
     }
 }
 
-enum drop_type game_t::drop_available(void *obj, int x, int y)
+enum drop_type game_t::drop_available(void *obj, struct cell_t cell)
 {
     game_t *that = (game_t *) obj;
 
-    enum drop_type type = that->get_drop_type(x, y);
+    enum drop_type type = that->get_drop_type(cell);
 
     if (type == DROP_NONE) {
         return DROP_NONE;
@@ -273,7 +289,7 @@ enum drop_type game_t::drop_available(void *obj, int x, int y)
         if (that->most_recent_color != that->i_follow_color) {
             return DROP_NONE;
         }
-        if ((that->get_drop_type(x, y) == DROP_FLOATER)
+        if ((that->get_drop_type(cell) == DROP_FLOATER)
             && that->i_used_floater) {
             return DROP_NONE;
         }
@@ -353,13 +369,16 @@ bool game_t::parse_clk(void *obj, const char *packet)
     int x, y;
     unsigned c, is_floater;
     Fl_Color color;
+    struct cell_t cell;
     if (sscanf(packet, "clk %d %d %u %u", &x, &y, &c, &is_floater) != 4) {
         printf("couldn't parse a clk out of '%s'\n", packet);
         return true;
     }
     color = (Fl_Color) c;
+    cell.x = x;
+    cell.y = y;
 
-    enum drop_type type = that->get_drop_type(x, y);
+    enum drop_type type = that->get_drop_type(cell);
 
     if (color == that->my_color && type == DROP_FLOATER
         && that->state != STATE_INIT) {
@@ -388,24 +407,24 @@ bool game_t::parse_clk(void *obj, const char *packet)
     }
     that->most_recent_color = color;
 
-    that->set_piece(x, y, color, type);
+    that->set_piece(cell.x, cell.y, color, type);
     return true;
 }
 
-void game_t::local_click(void *obj, int x, int y)
+void game_t::local_click(void *obj, struct cell_t cell)
 {
     game_t *that = (game_t *) obj;
 
-    if (drop_available(obj, x, y) == DROP_NONE) {
+    if (drop_available(obj, cell) == DROP_NONE) {
         return;
     }
 
     int is_floater = 0;
-    if (that->get_drop_type(x, y) == DROP_FLOATER) {
+    if (that->get_drop_type(cell) == DROP_FLOATER) {
         is_floater = 1;
     }
 
-    that->sendtxt_func(that->net_obj, "clk %d %d %u %u", x, y,
+    that->sendtxt_func(that->net_obj, "clk %d %d %u %u", cell.x, cell.y,
                        that->my_color, is_floater);
 }
 
@@ -414,4 +433,11 @@ void game_t::send_reset(void *obj)
     game_t *that = (game_t *) obj;
 
     that->sendtxt_func(that->net_obj, "cls");
+}
+
+void game_t::undo(void *obj)
+{
+    game_t *that = (game_t *) obj;
+
+    printf("undo\n");
 }

@@ -28,25 +28,23 @@ int gui_t::handle(int event)
         len = h();
     }
     square_dim = len / BOARD_DIM;
-    int event_x = Fl::event_x() / square_dim;
-    int event_y = Fl::event_y() / square_dim;
+    struct cell_t event_cell;
+    event_cell.x = Fl::event_x() / square_dim;
+    event_cell.y = Fl::event_y() / square_dim;
     enum drop_type drop_type;
     switch (event) {
     case FL_LEAVE:
-        cursor_x = -1;
-        cursor_y = -1;
+        cursor_cell = INVALID_CELL;
         redraw();
         return 1;
     case FL_MOVE:
-        if (canclick_func(game_obj, event_x, event_y)) {
-            if (event_x != cursor_x || event_y != cursor_y) {
-                cursor_x = event_x;
-                cursor_y = event_y;
+        if (canclick_func(game_obj, event_cell)) {
+            if (cellcmp(cursor_cell, event_cell)){
+                cursor_cell = event_cell;
                 redraw();
             }
         } else {
-            cursor_x = -1;
-            cursor_y = -1;
+            cursor_cell = INVALID_CELL;
             redraw();
         }
         return 1;
@@ -57,37 +55,38 @@ int gui_t::handle(int event)
         if (disabled) {
             return 1;
         }
-        drop_type = canclick_func(game_obj, event_x, event_y);
+        drop_type = canclick_func(game_obj, event_cell);
         if (drop_type == DROP_NONE) {
             return 1;
         }
-        if (drop_type == DROP_FLOATER && !first_click
-            && (floater_hold_x != event_x || floater_hold_y != event_y)) {
-            if (floater_hold_x == -1 || floater_hold_y == -1) {
-                floater_hold_x = event_x;
-                floater_hold_y = event_y;
+        if (drop_type == DROP_FLOATER && !first_click && cellcmp(floater_hold_cell, event_cell)){
+            if (!valid(floater_hold_cell)){
+                floater_hold_cell = event_cell;
             } else {
-                floater_hold_x = -1;
-                floater_hold_y = -1;
+                floater_hold_cell = INVALID_CELL;
             }
             redraw();
             return 1;
         }
-        if (drop_type != DROP_FLOATER
-            && (floater_hold_x != -1 && floater_hold_y != -1)) {
-            floater_hold_x = -1;
-            floater_hold_y = -1;
+        if (drop_type != DROP_FLOATER && valid(floater_hold_cell)) {
+            floater_hold_cell = INVALID_CELL;
             redraw();
             return 1;
         }
-        floater_hold_x = -1;
-        floater_hold_y = -1;
-        onclick_func(game_obj, event_x, event_y);
+        floater_hold_cell = INVALID_CELL;
+        onclick_func(game_obj, event_cell);
         disabled = 1;
         return 1;
     case FL_SHORTCUT:
         if ((Fl::event_state() & FL_SHIFT) && (Fl::event_key() == FL_Delete)) {
             resetgame_func(game_obj);
+            return 1;
+        } else if ((Fl::event_state() & FL_CTRL) && (Fl::event_key() == 'z')){
+            if (valid(floater_hold_cell)){
+                floater_hold_cell = INVALID_CELL;
+            } else {
+                undo_func(game_obj);
+            }
             return 1;
         }
         //fall through
@@ -118,23 +117,23 @@ void gui_t::draw_anim_drop(struct anim_t *anim, float elapsed)
     int size_increment;
     fl_color(anim->color);
 
-    int draw_x = anim->x * square_dim;
-    int draw_y = anim->y * square_dim;
+    int draw_x = anim->cell.x * square_dim;
+    int draw_y = anim->cell.y * square_dim;
     switch (anim->drop_type) {
     case DROP_LEFT:
-        draw_x = (int)bounceOut(elapsed, 0, anim->x * square_dim, ANIM_LEN);
+        draw_x = (int)bounceOut(elapsed, 0, anim->cell.x * square_dim, ANIM_LEN);
         break;
     case DROP_RIGHT:
         draw_x =
-            w() - (int)bounceOut(elapsed, 0, w() - anim->x * square_dim,
+            w() - (int)bounceOut(elapsed, 0, w() - anim->cell.x * square_dim,
                                  ANIM_LEN);
         break;
     case DROP_TOP:
-        draw_y = (int)bounceOut(elapsed, 0, anim->y * square_dim, ANIM_LEN);
+        draw_y = (int)bounceOut(elapsed, 0, anim->cell.y * square_dim, ANIM_LEN);
         break;
     case DROP_BOTTOM:
         draw_y =
-            h() - (int)bounceOut(elapsed, 0, h() - anim->y * square_dim,
+            h() - (int)bounceOut(elapsed, 0, h() - anim->cell.y * square_dim,
                                  ANIM_LEN);
         break;
     case DROP_FLOATER:
@@ -146,8 +145,8 @@ void gui_t::draw_anim_drop(struct anim_t *anim, float elapsed)
         break;
     case DROP_NONE:
     default:
-        draw_x = (int)bounceOut(elapsed, 0, anim->x * square_dim, ANIM_LEN);
-        draw_y = (int)bounceOut(elapsed, 0, anim->y * square_dim, ANIM_LEN);
+        draw_x = (int)bounceOut(elapsed, 0, anim->cell.x * square_dim, ANIM_LEN);
+        draw_y = (int)bounceOut(elapsed, 0, anim->cell.y * square_dim, ANIM_LEN);
     }
     fl_rectf(draw_x, draw_y, draw_size, draw_size);
 }
@@ -171,16 +170,16 @@ void gui_t::draw()
     fl_rectf(0, 0, square_dim * BOARD_DIM, square_dim * BOARD_DIM, BOARD_EMPTY);
     int i, j;
 
-    if (cursor_x > -1 && cursor_y > -1) {
+    if (valid(cursor_cell)){
         fl_color(fl_lighter(my_color));
-        fl_rectf(cursor_x * square_dim + 1, cursor_y * square_dim + 1,
+        fl_rectf(cursor_cell.x * square_dim + 1, cursor_cell.y * square_dim + 1,
                  square_dim - 1, square_dim - 1);
     }
 
-    if (floater_hold_x != -1 && floater_hold_y != -1) {
+    if (valid(floater_hold_cell)) {
         fl_color(fl_lighter(fl_lighter(my_color)));
-        fl_rectf(floater_hold_x * square_dim + 1,
-                 floater_hold_y * square_dim + 1, square_dim - 1,
+        fl_rectf(floater_hold_cell.x * square_dim + 1,
+                 floater_hold_cell.y * square_dim + 1, square_dim - 1,
                  square_dim - 1);
     }
 
@@ -206,15 +205,15 @@ void gui_t::draw()
             if (removed_anim.type == ANIM_DROP) {
                 /* This piece might already have been colored due to the
                    highlight being removed from it */
-                if (clicks[removed_anim.x][removed_anim.y] == BOARD_EMPTY) {
-                    clicks[removed_anim.x][removed_anim.y] = removed_anim.color;
+                if (clicks[removed_anim.cell.x][removed_anim.cell.y] == BOARD_EMPTY) {
+                    clicks[removed_anim.cell.x][removed_anim.cell.y] = removed_anim.color;
                 }
-                fl_color(clicks[removed_anim.x][removed_anim.y]);
-                fl_rectf(removed_anim.x * square_dim,
-                         removed_anim.y * square_dim, 20, 20);
+                fl_color(clicks[removed_anim.cell.x][removed_anim.cell.y]);
+                fl_rectf(removed_anim.cell.x * square_dim,
+                         removed_anim.cell.y * square_dim, 20, 20);
                 fl_color(FL_BLACK);
-                fl_rect(removed_anim.x * square_dim,
-                        removed_anim.y * square_dim, 20, 20);
+                fl_rect(removed_anim.cell.x * square_dim,
+                        removed_anim.cell.y * square_dim, 20, 20);
             }
         } else {
             (this->*(anim->draw_func)) (anim, elapsed);
@@ -251,12 +250,10 @@ void gui_t::reset_board(void *obj)
     that->num_anims = 0;
     that->animating = 0;
     that->state = STATE_PLAYING;
-    that->floater_hold_x = -1;
-    that->floater_hold_y = -1;
+    that->floater_hold_cell = INVALID_CELL;
     that->first_click = 1;
     that->disabled = 0;
-    that->last_x = -1;
-    that->last_y = -1;
+    that->last_click_cell = INVALID_CELL;
 
     int i, j;
     for (i = 0; i < BOARD_DIM; i++) {
@@ -272,46 +269,49 @@ gui_t::gui_t(Fl_Color _my_color, int width, int height,
              const char *title):Fl_Double_Window(width, height, title)
 {
     end();
-    cursor_x = -1;
-    cursor_y = -1;
+    cursor_cell = INVALID_CELL;
     skip_animations = true;
     Fl::add_timeout(ANIM_LEN, &gui_t::enable_animations, this);
     my_color = _my_color;
     reset_board(this);
 }
 
-int gui_t::get_animation_for_cell(int x, int y)
+int gui_t::get_animation_for_cell(struct cell_t cell)
 {
     int i;
     for (i = 0; i < num_anims; i++) {
-        if (anims[i].x == x && anims[i].y == y) {
+        if (cellcmp(anims[i].cell, cell) == 0){
             return i;
         }
     }
     return -1;
 }
 
-void gui_t::drop_piece(void *obj, int x, int y, Fl_Color color,
+int gui_t::valid(struct cell_t cell)
+{
+    return (cell.x != -1 && cell.y != -1);
+}
+
+void gui_t::drop_piece(void *obj, struct cell_t cell, Fl_Color color,
                        enum drop_type type)
 {
     gui_t *that = (gui_t *) obj;
     that->first_click = 0;
     that->disabled = 0;
-    if (that->last_x != -1 && that->last_y != -1) {
-        that->clicks[that->last_x][that->last_y] = that->last_color;
+    if (that->valid(that->last_click_cell)){
+        that->clicks[that->last_click_cell.x][that->last_click_cell.y] = that->last_color;
     }
-    that->last_x = x;
-    that->last_y = y;
+    that->last_click_cell = cell;
     that->last_color = color;
     if (color != BOARD_STONE) {
         color = fl_darker(color);
     }
     if (that->skip_animations) {
-        that->clicks[x][y] = color;
+        that->clicks[cell.x][cell.y] = color;
         that->redraw();
         return;
     }
-    int idx = that->get_animation_for_cell(x, y);
+    int idx = that->get_animation_for_cell(cell);
     if (idx == -1 || color != BOARD_STONE) {
         idx = that->num_anims;
         that->num_anims++;
@@ -320,8 +320,7 @@ void gui_t::drop_piece(void *obj, int x, int y, Fl_Color color,
     anim->drop_type = type;
     anim->type = ANIM_DROP;
     anim->draw_func = &gui_t::draw_anim_drop;
-    anim->x = x;
-    anim->y = y;
+    anim->cell = cell;
     anim->color = color;
     anim->len = ANIM_LEN;
     gettimeofday(&(anim->start), NULL);
@@ -331,7 +330,7 @@ void gui_t::drop_piece(void *obj, int x, int y, Fl_Color color,
 
     /* Stone pieces cover up any existing pieces */
     if (color == BOARD_STONE) {
-        that->clicks[x][y] = BOARD_EMPTY;
+        that->clicks[cell.x][cell.y] = BOARD_EMPTY;
     }
 }
 

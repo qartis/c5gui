@@ -70,6 +70,7 @@ int main(int argc, char **argv)
     gui.onclick_func = &game_t::local_click;
     gui.canclick_func = &game_t::drop_available;
     gui.resetgame_func = &game_t::send_reset;
+    gui.undo_func = &game_t::undo;
 
     net.add_packet_handler(&game, &game_t::parse_clk);
     net.add_packet_handler(&game, &game_t::parse_cls);

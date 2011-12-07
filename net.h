@@ -2,7 +2,6 @@ typedef bool(*packet_handler_t) (void *obj, const char *buf);
 
 #define HTTP_GET_URL  "http://qartis.com/cgi-bin/c5_get.cgi"
 #define HTTP_POST_URL "http://qartis.com/cgi-bin/c5_put.cgi?"
-#define NUM_HANDLERS 32
 
 class net_t;
 
@@ -25,8 +24,8 @@ struct SockInfo {
 
 class net_t {
 private:
-    packet_handler_t packet_handler_funcs[NUM_HANDLERS];
-    void *packet_handler_objs[NUM_HANDLERS];
+    packet_handler_t packet_handler_funcs[MAX];
+    void *packet_handler_objs[MAX];
     char netbuf[128];
     int num_packet_handlers;
     CURLM *multi;
