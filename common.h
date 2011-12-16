@@ -12,7 +12,7 @@ struct cell_t {
     int y;
 };
 
-static struct cell_t INVALID_CELL = {-1, -1};
+const struct cell_t INVALID_CELL = {-1, -1};
 
 inline int cellcmp(struct cell_t a, struct cell_t b)
 {
