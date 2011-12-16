@@ -5,11 +5,6 @@ typedef void (*droppiece_func_t) (void *obj, struct cell_t cell, Fl_Color c,
 typedef void (*resetgui_func_t) (void *obj);
 typedef void (*gameover_func_t) (void *obj, bool won);
 
-struct order_node {
-    Fl_Color color;
-    struct order_node *next;
-};
-
 struct turn {
     struct cell_t cell;
     Fl_Color color;
