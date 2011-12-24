@@ -40,6 +40,9 @@ private:
     struct anim_t remove_animation(int idx);
     int get_animation_for_cell(struct cell_t cell);
     int valid(struct cell_t cell);
+    int handle_shortcut(int event);
+    int handle_mouse_click(struct cell_t event_cell);
+    int handle_mouse_move(struct cell_t event_cell);
 
     enum game_state state;
 

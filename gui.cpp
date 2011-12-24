@@ -31,64 +31,90 @@ int gui_t::handle(int event)
     struct cell_t event_cell;
     event_cell.x = Fl::event_x() / square_dim;
     event_cell.y = Fl::event_y() / square_dim;
-    enum drop_type drop_type;
     switch (event) {
     case FL_LEAVE:
         cursor_cell = INVALID_CELL;
         redraw();
         return 1;
     case FL_MOVE:
-        if (canclick_func(game_obj, event_cell)) {
-            if (cellcmp(cursor_cell, event_cell)){
-                cursor_cell = event_cell;
-                redraw();
-            }
-        } else {
-            cursor_cell = INVALID_CELL;
-            redraw();
-        }
+        return handle_mouse_move(event_cell);
         return 1;
     case FL_PUSH:
         if (Fl::event_button() != FL_LEFT_MOUSE) {
             return 0;
         }
-        if (disabled) {
-            return 1;
-        }
-        if (valid(floater_hold_cell) && cellcmp(floater_hold_cell, event_cell)) {
-            floater_hold_cell = INVALID_CELL;
-            redraw();
-            return 1;
-        }
-        drop_type = canclick_func(game_obj, event_cell);
-        if (drop_type == DROP_NONE) {
-            return 1;
-        }
-        if (drop_type == DROP_FLOATER && !first_click && cellcmp(floater_hold_cell, event_cell)){
-            floater_hold_cell = event_cell;
-            redraw();
-            return 1;
-        }
-        floater_hold_cell = INVALID_CELL;
-        onclick_func(game_obj, event_cell);
-        disabled = 1;
-        return 1;
+        return handle_mouse_click(event_cell);
+        break;
     case FL_SHORTCUT:
-        if ((Fl::event_state() & FL_SHIFT) && (Fl::event_key() == FL_Delete)) {
-            resetgame_func(game_obj);
-            return 1;
-        } else if ((Fl::event_state() & FL_CTRL) && (Fl::event_key() == 'z')){
-            if (valid(floater_hold_cell)){
-                floater_hold_cell = INVALID_CELL;
-            } else {
-                undo_func(game_obj);
-            }
+        if (handle_shortcut(event)){
+            redraw();
             return 1;
         }
         //fall through
     default:
         return Fl_Double_Window::handle(event);
     }
+    return 0;
+}
+
+int gui_t::handle_mouse_move(struct cell_t event_cell)
+{
+    if (canclick_func(game_obj, event_cell)) {
+        if (cellcmp(cursor_cell, event_cell)){
+            cursor_cell = event_cell;
+            redraw();
+        }
+    } else {
+        cursor_cell = INVALID_CELL;
+        redraw();
+    }
+
+    return 1;
+}
+
+int gui_t::handle_mouse_click(struct cell_t event_cell){
+    enum drop_type drop_type = canclick_func(game_obj, event_cell);
+
+    if (disabled) {
+        return 1;
+    }
+    if (valid(floater_hold_cell) && cellcmp(floater_hold_cell, event_cell)) {
+        floater_hold_cell = INVALID_CELL;
+        redraw();
+        return 1;
+    }
+    if (drop_type == DROP_NONE) {
+        return 1;
+    }
+    if (drop_type == DROP_FLOATER && !first_click && cellcmp(floater_hold_cell, event_cell)){
+        floater_hold_cell = event_cell;
+        redraw();
+        return 1;
+    }
+    floater_hold_cell = INVALID_CELL;
+    onclick_func(game_obj, event_cell);
+    disabled = 1;
+    redraw();
+    return 1;
+}
+
+int gui_t::handle_shortcut(int event)
+{
+    if ((Fl::event_state() & FL_SHIFT) && (Fl::event_key() == FL_Delete)) {
+        resetgame_func(game_obj);
+        return 1;
+    }
+    
+    if ((Fl::event_state() & FL_CTRL) && (Fl::event_key() == 'z')){
+        if (valid(floater_hold_cell)){
+            floater_hold_cell = INVALID_CELL;
+        } else {
+            undo_func(game_obj);
+        }
+        return 1;
+    }
+
+    return 0;
 }
 
 void gui_t::draw_anim_win(struct anim_t *anim, float elapsed)
