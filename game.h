@@ -32,9 +32,10 @@ private:
     Fl_Color my_color;
     Fl_Color i_follow_color;
     Fl_Color most_recent_color;
-    int i_used_floater;
     Fl_Color cur_line_color;
+    int i_used_floater;
     int cur_line_len;
+
     Fl_Color order[MAX];
     int num_in_order;
 
@@ -43,6 +44,7 @@ public:
 
     static bool parse_clk(void *obj, const char *s);
     static bool parse_cls(void *obj, const char *s);
+    static bool parse_undo(void *obj, const char *s);
     static void local_click(void *obj, struct cell_t cell);
     static enum drop_type drop_available(void *obj, struct cell_t cell);
     static void send_reset(void *obj);

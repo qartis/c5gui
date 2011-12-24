@@ -112,8 +112,7 @@ enum drop_type game_t::get_drop_type(struct cell_t cell)
 
 bool game_t::valid(int x, int y)
 {
-    return (0 <= x && x < grid_dim) &&
-           (0 <= y && y < grid_dim);
+    return (0 <= x && x < grid_dim) && (0 <= y && y < grid_dim);
 }
 
 int game_t::stonify(struct cell_t cell)
@@ -219,10 +218,10 @@ int game_t::stonify(struct cell_t cell)
 
 void game_t::unmatched_line(Fl_Color color)
 {
-    if (color == cur_line_color){
+    if (color == cur_line_color) {
         cur_line_color = BOARD_EMPTY;
         cur_line_len = -1;
-    } else if (color == my_color){
+    } else if (color == my_color) {
         state = STATE_LOST;
         gameover_func(gui_obj, STATE_LOST);
     } else {
@@ -315,6 +314,20 @@ bool game_t::parse_cls(void *obj, const char *packet)
     game_t *that = (game_t *) obj;
 
     if (strcmp(packet, "0")) {
+        return false;
+    }
+
+    that->reset();
+    that->resetgui_func(that->gui_obj);
+
+    return true;
+}
+
+bool game_t::parse_undo(void *obj, const char *packet)
+{
+    game_t *that = (game_t *) obj;
+
+    if (!startswith(packet, "undo")) {
         return false;
     }
 
@@ -438,5 +451,5 @@ void game_t::undo(void *obj)
 {
     game_t *that = (game_t *) obj;
 
-    printf("undo\n");
+    that->sendtxt_func(that->net_obj, "undo");
 }
