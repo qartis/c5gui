@@ -11,40 +11,39 @@
 #include "game.h"
 #include "gui.h"
 
-Fl_Color progname_to_color(const char *progname)
+const char *strrstr(const char *haystack, const char *needle)
 {
-    const char *lastslash = strrchr(progname, '/');
-    if (lastslash) {
-        progname = lastslash + strlen("/");
+    const char *pos = strstr(haystack, needle);
+    if (pos){
+        return pos + strlen(needle);
+    } else {
+        return haystack;
+    }
+}
+
+Fl_Color exename_to_color(const char *exename)
+{
+    exename = strrstr(exename, "/");
+    exename = strrstr(exename, "\\");
+    exename = strrstr("c5");
+
+    if (isspace(*exename)) {
+        exename++;
     }
 
-    lastslash = strrchr(progname, '\\');
-    if (lastslash) {
-        progname = lastslash + strlen("\\");
-    }
-
-    const char *c5 = strstr(progname, "c5");
-    if (c5) {
-        progname = c5 + strlen("c5");
-    }
-
-    if (isspace(progname[0])) {
-        progname = progname + 1;
-    }
-
-    if (startswith(progname, "red"))
+    if (startswith(exename, "red"))
         return FL_RED;
-    if (startswith(progname, "blue"))
+    if (startswith(exename, "blue"))
         return FL_BLUE;
-    if (startswith(progname, "green"))
+    if (startswith(exename, "green"))
         return FL_GREEN;
-    if (startswith(progname, "yellow"))
+    if (startswith(exename, "yellow"))
         return FL_YELLOW;
 
     unsigned r;
     unsigned g;
     unsigned b;
-    if (sscanf(progname, "%02x%02x%02x", &r, &g, &b) == 3) {
+    if (sscanf(exename, "%02x%02x%02x", &r, &g, &b) == 3) {
         return fl_rgb_color((unsigned char)r, (unsigned char)g,
                             (unsigned char)b);
     }
@@ -53,7 +52,7 @@ Fl_Color progname_to_color(const char *progname)
 
 int main(int argc, char **argv)
 {
-    Fl_Color my_color = progname_to_color(argv[0]);
+    Fl_Color my_color = exename_to_color(argv[0]);
 
     net_t net;
     game_t game(my_color);
@@ -74,6 +73,7 @@ int main(int argc, char **argv)
 
     net.add_packet_handler(&game, &game_t::parse_clk);
     net.add_packet_handler(&game, &game_t::parse_cls);
+    net.add_packet_handler(&game, &game_t::parse_undo);
     net.connect();
 
     gui.show(argc, argv);
