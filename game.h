@@ -3,7 +3,7 @@ typedef void (*sendtxt_func_t) (void *obj, const char *fmt, ...)
 typedef void (*droppiece_func_t) (void *obj, struct cell_t cell, Fl_Color c,
                                   enum drop_type type);
 typedef void (*resetgui_func_t) (void *obj);
-typedef void (*gameover_func_t) (void *obj, bool won);
+typedef void (*gameover_func_t) (void *obj, enum game_state state);
 
 struct turn {
     struct cell_t cell;
@@ -13,12 +13,7 @@ struct turn {
 class game_t {
 private:
     int grid_dim;
-    enum game_state {
-        STATE_INIT,
-        STATE_SET_ORDER,
-        STATE_PLAYING,
-        STATE_GAMEOVER
-    } state;
+    enum game_state state;
     Fl_Color board[BOARD_DIM][BOARD_DIM];
     struct turn turns[BOARD_DIM * BOARD_DIM];
     int num_turns;

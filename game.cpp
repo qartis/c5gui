@@ -223,8 +223,8 @@ void game_t::unmatched_line(Fl_Color color)
         cur_line_color = BOARD_EMPTY;
         cur_line_len = -1;
     } else if (color == my_color){
-        state = STATE_GAMEOVER;
-        gameover_func(gui_obj, false);
+        state = STATE_LOST;
+        gameover_func(gui_obj, STATE_LOST);
     } else {
         Fl_Color new_follow_color = remove_from_order(color);
         if (i_follow_color == color) {
@@ -233,9 +233,11 @@ void game_t::unmatched_line(Fl_Color color)
         }
         if (num_in_order == 1) {
             if (order[0] == my_color) {
-                gameover_func(gui_obj, true);
+                state = STATE_WON;
+            } else {
+                state = STATE_OVER;
             }
-            state = STATE_GAMEOVER;
+            gameover_func(gui_obj, state);
         }
     }
 }
@@ -301,7 +303,6 @@ enum drop_type game_t::drop_available(void *obj, struct cell_t cell)
         }
         return type;
         break;
-    case STATE_GAMEOVER:
     default:
         return DROP_NONE;
     }
@@ -400,8 +401,6 @@ bool game_t::parse_clk(void *obj, const char *packet)
             that->add_to_order(color);
         }
         break;
-    case STATE_PLAYING:
-    case STATE_GAMEOVER:
     default:
         break;
     }

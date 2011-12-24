@@ -55,21 +55,17 @@ int gui_t::handle(int event)
         if (disabled) {
             return 1;
         }
+        if (valid(floater_hold_cell) && cellcmp(floater_hold_cell, event_cell)) {
+            floater_hold_cell = INVALID_CELL;
+            redraw();
+            return 1;
+        }
         drop_type = canclick_func(game_obj, event_cell);
         if (drop_type == DROP_NONE) {
             return 1;
         }
         if (drop_type == DROP_FLOATER && !first_click && cellcmp(floater_hold_cell, event_cell)){
-            if (!valid(floater_hold_cell)){
-                floater_hold_cell = event_cell;
-            } else {
-                floater_hold_cell = INVALID_CELL;
-            }
-            redraw();
-            return 1;
-        }
-        if (drop_type != DROP_FLOATER && valid(floater_hold_cell)) {
-            floater_hold_cell = INVALID_CELL;
+            floater_hold_cell = event_cell;
             redraw();
             return 1;
         }
@@ -231,14 +227,21 @@ void gui_t::draw()
 
     if (state != STATE_PLAYING) {
         const char *msg;
-        if (state == STATE_WON) {
+        switch (state){
+        case STATE_WON:
             msg = "You Won";
             fl_color(FL_GREEN);
-        } else {
+            break;
+        case STATE_LOST:
             msg = "You Lost";
             fl_color(FL_RED);
+            break;
+        case STATE_OVER:
+            msg = "Game Over";
+            fl_color(FL_BLUE);
+            break;
         }
-        fl_font(FL_HELVETICA, 100);
+        fl_font(FL_HELVETICA, 75);
         fl_draw(msg, 0, 0, w(), h(), FL_ALIGN_CENTER, NULL, 0);
     }
 }
@@ -381,16 +384,11 @@ void gui_t::enable_animations(void *obj)
     that->skip_animations = 0;
 }
 
-void gui_t::game_over(void *obj, bool won)
+void gui_t::game_over(void *obj, enum game_state state)
 {
     gui_t *that = (gui_t *) obj;
 
-    if (won) {
-        printf("I WON!\n");
-        that->state = STATE_WON;
-    } else {
-        printf("I LOST\n");
-        that->state = STATE_LOST;
-    }
+    that->state = state;
+
     that->redraw();
 }

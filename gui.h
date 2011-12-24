@@ -41,11 +41,7 @@ private:
     int get_animation_for_cell(struct cell_t cell);
     int valid(struct cell_t cell);
 
-    enum {
-        STATE_PLAYING,
-        STATE_WON,
-        STATE_LOST
-    } state;
+    enum game_state state;
 
     Fl_Color clicks[BOARD_DIM][BOARD_DIM];
     struct anim_t anims[MAX];
@@ -71,7 +67,7 @@ public:
     static void reset_board(void *obj);
     static void process_anims(void *obj);
     static void enable_animations(void *obj);
-    static void game_over(void *obj, bool won);
+    static void game_over(void *obj, enum game_state state);
 
     void *game_obj;
     onclick_func_t onclick_func;

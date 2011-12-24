@@ -12,6 +12,15 @@ struct cell_t {
     int y;
 };
 
+enum game_state {
+    STATE_INIT,
+    STATE_SET_ORDER,
+    STATE_PLAYING,
+    STATE_WON,
+    STATE_LOST,
+    STATE_OVER
+};
+
 const struct cell_t INVALID_CELL = {-1, -1};
 
 inline int cellcmp(struct cell_t a, struct cell_t b)
