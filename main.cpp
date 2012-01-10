@@ -25,7 +25,7 @@ Fl_Color exename_to_color(const char *exename)
 {
     exename = strrstr(exename, "/");
     exename = strrstr(exename, "\\");
-    exename = strrstr("c5");
+    exename = strrstr(exename, "c5");
 
     if (isspace(*exename)) {
         exename++;
