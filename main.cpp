@@ -39,6 +39,8 @@ Fl_Color exename_to_color(const char *exename)
         return FL_GREEN;
     if (startswith(exename, "yellow"))
         return FL_YELLOW;
+    if (startswith(exename, "purple"))
+        return fl_rgb_color(0x7d, 0x26, 0xcd);
 
     unsigned r;
     unsigned g;
