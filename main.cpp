@@ -13,7 +13,21 @@
 
 const char *strrstr(const char *haystack, const char *needle)
 {
-    const char *pos = strstr(haystack, needle);
+	const char *prev = NULL;
+	const char *next;
+	if (*needle == '\0')
+		return strchr(haystack, '\0');
+
+	while ((next = strstr(haystack, needle)) != NULL) {
+		prev = next;
+		haystack = next + 1;
+	}
+	return prev;
+}
+
+const char *skippast(const char *haystack, const char *needle)
+{
+    const char *pos = strrstr(haystack, needle);
     if (pos){
         return pos + strlen(needle);
     } else {
@@ -23,9 +37,9 @@ const char *strrstr(const char *haystack, const char *needle)
 
 Fl_Color exename_to_color(const char *exename)
 {
-    exename = strrstr(exename, "/");
-    exename = strrstr(exename, "\\");
-    exename = strrstr(exename, "c5");
+    exename = skippast(exename, "/");
+    exename = skippast(exename, "\\");
+    exename = skippast(exename, "c5");
 
     if (isspace(*exename)) {
         exename++;
