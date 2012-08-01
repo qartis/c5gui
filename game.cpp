@@ -290,8 +290,7 @@ enum drop_type game_t::drop_available(void *obj, struct cell_t cell)
         if (that->most_recent_color != that->i_follow_color) {
             return DROP_NONE;
         }
-        if ((that->get_drop_type(cell) == DROP_FLOATER)
-            && that->i_used_floater) {
+        if ((type == DROP_FLOATER) && that->i_used_floater) {
             return DROP_NONE;
         }
         return type;

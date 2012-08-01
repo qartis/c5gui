@@ -14,7 +14,6 @@ enum anim_type {
     ANIM_FLOATER_CLICK
 };
 
-
 struct anim_t {
     enum anim_type type;
     struct timeval start;
@@ -25,7 +24,6 @@ struct anim_t {
     Fl_Color color;
     struct cell_t cell;
 };
-
 
 class gui_t:public Fl_Double_Window {
 private:
