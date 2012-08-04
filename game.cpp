@@ -226,9 +226,9 @@ void game_t::unmatched_line(Fl_Color color)
         gameover_func(gui_obj, STATE_LOST);
     } else {
         Fl_Color new_follow_color = remove_from_order(color);
+        most_recent_color = i_follow_color;
         if (i_follow_color == color) {
             i_follow_color = new_follow_color;
-            most_recent_color = i_follow_color;
         }
         if (num_in_order == 1) {
             if (order[0] == my_color) {
