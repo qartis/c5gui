@@ -115,13 +115,13 @@ bool game_t::valid(int x, int y)
     return (0 <= x && x < grid_dim) && (0 <= y && y < grid_dim);
 }
 
-int game_t::countline(struct cell_t cell, int x_move, int y_move)
+int game_t::countline(struct cell_t *cell, int x_move, int y_move)
 {
-    int x = cell.x;
-    int y = cell.y;
+    int x = cell->x;
+    int y = cell->y;
     int i;
 
-    for (i = 0; valid(x, y) && board[x][y] == board[cell.x][cell.y]; i++) {
+    for (i = 0; valid(x, y) && board[x][y] == board[cell->x][cell->y]; i++) {
         x += x_move;
         y += y_move;
     }
@@ -130,10 +130,12 @@ int game_t::countline(struct cell_t cell, int x_move, int y_move)
 }
 
 
-int game_t::stonify(struct cell_t cell)
+int game_t::stonify(struct cell_t *cell)
 {
     int i;
     int len = 0;
+    int x = cell->x;
+    int y = cell->y;
 
     int left  = countline(cell, -1,  0);
     int right = countline(cell, +1,  0);
@@ -239,7 +241,7 @@ void game_t::set_piece(int x, int y, Fl_Color color, enum drop_type type)
         return;
     }
 
-    int line_len = stonify(cell);
+    int line_len = stonify(&cell);
     if (line_len == 0) {
         droppiece_func(gui_obj, cell, color, type);
         if (cur_line_len > 0) {

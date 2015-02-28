@@ -20,8 +20,8 @@ private:
     bool is_my_turn;
     bool clicked_during_set_order;
     bool used_floater_this_game;
-    int countline(struct cell_t cell, int x_move, int y_move);
-    int stonify(struct cell_t cell);
+    int countline(struct cell_t *cell, int x_move, int y_move);
+    int stonify(struct cell_t *cell);
     void reset(void);
     enum drop_type get_drop_type(struct cell_t cell);
     void print_order();
