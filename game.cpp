@@ -115,54 +115,35 @@ bool game_t::valid(int x, int y)
     return (0 <= x && x < grid_dim) && (0 <= y && y < grid_dim);
 }
 
+int game_t::countline(struct cell_t cell, int x_move, int y_move)
+{
+    int x = cell.x;
+    int y = cell.y;
+    int i;
+
+    for (i = 0; valid(x, y) && board[x][y] == board[cell.x][cell.y]; i++) {
+        x += x_move;
+        y += y_move;
+    }
+
+    return i;
+}
+
+
 int game_t::stonify(struct cell_t cell)
 {
     int i;
     int len = 0;
 
-    int left = 0;
-    int right = 0;
-    int up = 0;
-    int down = 0;
-    int topleft = 0;
-    int topright = 0;
-    int botleft = 0;
-    int botright = 0;
+    int left  = countline(cell, -1,  0);
+    int right = countline(cell, +1,  0);
+    int up    = countline(cell,  0, -1);
+    int down  = countline(cell,  0, +1);
 
-    int x = cell.x;
-    int y = cell.y;
-
-    for (i = x - 1; valid(i, y) && board[i][y] == board[x][y]; i--) {
-        left++;
-    }
-
-    for (i = x + 1; valid(i, y) && board[i][y] == board[x][y]; i++) {
-        right++;
-    }
-
-    for (i = y - 1; valid(x, y) && board[x][i] == board[x][y]; i--) {
-        up++;
-    }
-
-    for (i = y + 1; valid(x, i) && board[x][i] == board[x][y]; i++) {
-        down++;
-    }
-
-    for (i = 1; valid(x - i, y - i) && board[x - i][y - i] == board[x][y]; i++) {
-        topleft++;
-    }
-
-    for (i = 1; valid(x + i, y - i) && board[x + i][y - i] == board[x][y]; i++) {
-        topright++;
-    }
-
-    for (i = 1; valid(x - i, y + i) && board[x - i][y + i] == board[x][y]; i++) {
-        botleft++;
-    }
-
-    for (i = 1; valid(x + i, y + i) && board[x + i][y + i] == board[x][y]; i++) {
-        botright++;
-    }
+    int topleft  = countline(cell, -1, -1);
+    int topright = countline(cell, +1, -1);
+    int botleft  = countline(cell, -1, +1);
+    int botright = countline(cell, +1, +1);
 
     if (left + right + 1 >= 5) {
         for (i = 0; i < left; i++) {
@@ -312,7 +293,7 @@ bool game_t::parse_cls(void *obj, const char *packet)
 {
     game_t *that = (game_t *) obj;
 
-    if (strcmp(packet, "0")) {
+    if (strcmp(packet, "cls") != 0) {
         return false;
     }
 
