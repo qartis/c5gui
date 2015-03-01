@@ -104,6 +104,7 @@ int gui_t::handle_mouse_click(struct cell_t event_cell)
 
 int gui_t::handle_shortcut(int event)
 {
+    (void)event;
     if ((Fl::event_state() & FL_SHIFT) && (Fl::event_key() == FL_Delete)) {
         resetgame_func(game_obj);
         return 1;
@@ -275,6 +276,10 @@ void gui_t::draw()
         case STATE_OVER:
             msg = "Game Over";
             fl_color(FL_BLUE);
+            break;
+        default:
+            msg = "Error";
+            fl_color(FL_RED);
             break;
         }
         fl_font(FL_HELVETICA, 75);
